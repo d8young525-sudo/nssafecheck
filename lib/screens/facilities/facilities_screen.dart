@@ -5,6 +5,7 @@ import '../../models/facility_model.dart';
 import '../../models/user_model.dart';
 import '../../services/firestore_service.dart';
 import '../../services/excel_service.dart';
+import '../inspection/inspection_page1_screen.dart';
 
 class FacilitiesScreen extends StatefulWidget {
   const FacilitiesScreen({super.key});
@@ -318,10 +319,13 @@ class _FacilitiesScreenState extends State<FacilitiesScreen> {
                                 ),
                                 trailing: const Icon(Icons.chevron_right),
                                 onTap: () {
-                                  // TODO: 점검 입력 화면으로 이동
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('${facility.facilityId} 점검 시작'),
+                                  // 점검 입력 화면으로 이동
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => InspectionPage1Screen(
+                                        facility: facility,
+                                      ),
                                     ),
                                   );
                                 },

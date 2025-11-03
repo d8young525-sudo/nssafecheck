@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../auth/login_screen.dart';
-import '../facilities/facilities_screen.dart';
+import '../inspection/inspection_form_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -23,7 +23,7 @@ class HomeScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('NS정기점검'),
+        title: const Text('농업용 관정 정기점검'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -40,65 +40,107 @@ class HomeScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(
-                  Icons.check_circle_outline,
+                  Icons.water_drop_outlined,
                   size: 80,
-                  color: Colors.green,
+                  color: Colors.blue,
                 ),
-                const SizedBox(height: 24),
-                const Text(
-                  '로그인 성공!',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                if (user != null) ...[
-                  Text(
-                    '환영합니다, ${user.email}님',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ],
                 const SizedBox(height: 48),
-                const Text(
-                  '다음 단계:',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
+                
+                // 메인 버튼 - 점검입력
                 InkWell(
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => const FacilitiesScreen(),
+                        builder: (context) => const InspectionFormScreen(),
                       ),
                     );
                   },
-                  child: _buildFeatureCard(
-                    icon: Icons.list_alt,
-                    title: '관정 목록',
-                    subtitle: '엑셀 업로드 및 관정 관리',
-                    color: Colors.blue,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.blue[600]!, Colors.blue[400]!],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blue.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Column(
+                      children: [
+                        Icon(
+                          Icons.assignment_outlined,
+                          size: 60,
+                          color: Colors.white,
+                        ),
+                        SizedBox(height: 12),
+                        Text(
+                          '점검 입력',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          '현장 점검 데이터 입력 시작',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: 12),
-                _buildFeatureCard(
-                  icon: Icons.assignment,
-                  title: '점검 입력',
-                  subtitle: '현장 점검 데이터 입력',
-                  color: Colors.green,
-                ),
-                const SizedBox(height: 12),
-                _buildFeatureCard(
-                  icon: Icons.photo_camera,
-                  title: '사진 촬영',
-                  subtitle: '18개 카테고리 사진 촬영',
-                  color: Colors.orange,
+                
+                const SizedBox(height: 16),
+                
+                // 점검 이력 버튼
+                InkWell(
+                  onTap: () {
+                    // TODO: 점검 이력 화면으로 이동
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('점검 이력 화면은 준비 중입니다')),
+                    );
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.orange.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.history,
+                          size: 36,
+                          color: Colors.orange,
+                        ),
+                        SizedBox(width: 12),
+                        Text(
+                          '점검 이력',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -108,14 +150,13 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatureCard({
+  Widget _buildSubFeatureCard({
     required IconData icon,
     required String title,
-    required String subtitle,
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
@@ -124,35 +165,20 @@ class HomeScreen extends StatelessWidget {
           width: 1,
         ),
       ),
-      child: Row(
+      child: Column(
         children: [
           Icon(
             icon,
-            size: 40,
+            size: 36,
             color: color,
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
+          const SizedBox(height: 8),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: color,
             ),
           ),
         ],
