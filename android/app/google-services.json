@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "732590262467",
+    "project_id": "nssafeflutter",
+    "storage_bucket": "nssafeflutter.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:732590262467:android:add054a0f0440dcbce3a76",
+        "android_client_info": {
+          "package_name": "com.company.nssafe"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDEIclfVxy-3jymgJosYYa5z_2XTUVMAkM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
