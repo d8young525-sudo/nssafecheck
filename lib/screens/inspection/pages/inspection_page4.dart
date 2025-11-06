@@ -116,33 +116,6 @@ class _InspectionPage4State extends State<InspectionPage4> {
                   ),
                 ),
               ),
-
-              const SizedBox(height: 24),
-
-              // 안내 메시지
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.amber[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.amber[200]!),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.lightbulb_outline, color: Colors.amber[900]),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        '다음 페이지에서 현장 사진을 촬영해주세요',
-                        style: TextStyle(
-                          color: Colors.amber[900],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
         );

@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../viewmodels/inspection_viewmodel.dart';
 
-/// Page 3: 전기설비 (17개 필드)
-/// 1, 10, 11번은 숫자 입력 + "확인불가" 체크박스 패턴
+/// Page 3: 전기설비 (18개 필드)
+/// 1번은 전기연결 상태 (연결/단전) - 단전 시 나머지 필드 비활성화
+/// 2, 11, 12번은 숫자 입력 + "확인불가" 체크박스 패턴
 class InspectionPage3 extends StatefulWidget {
   const InspectionPage3({super.key});
 
@@ -26,41 +27,46 @@ class _InspectionPage3State extends State<InspectionPage3> {
   bool _currentUnavailable = false;
 
   // Dropdown 선택값
-  String? _selectedNoise; // 2. 소음발생여부
-  String? _selectedOperationStatus; // 3. 작동상태
-  String? _selectedFlowRate; // 4. 유량
-  String? _selectedBoxExterior; // 5. 배전함외형
-  String? _selectedInstallation; // 6. 설치
-  String? _selectedElectricalConnection; // 7. 전기연결
+  String? _selectedElectricalConnection; // 1. 전기연결 (최우선 필드)
+  String? _selectedNoise; // 3. 소음발생여부
+  String? _selectedOperationStatus; // 4. 작동상태
+  String? _selectedFlowRate; // 5. 유량
+  String? _selectedBoxExterior; // 6. 배전함외형
+  String? _selectedInstallation; // 7. 설치
   String? _selectedGroundTerminal; // 8. 접지단자
   String? _selectedInsulationTerminal; // 9. 절연단자
-  String? _selectedFuse; // 12. 휴즈
-  String? _selectedFloatless; // 13. Floatless
-  String? _selectedEOCR; // 14. EOCR
-  String? _selectedMagnetic; // 15. 마그네틱
-  String? _selectedLamp; // 16. 램프
-  String? _selectedPanelOperation; // 17. 배전반동작
+  String? _selectedFuse; // 13. 휴즈
+  String? _selectedFloatless; // 14. Floatless
+  String? _selectedEOCR; // 15. EOCR
+  String? _selectedMagnetic; // 16. 마그네틱
+  String? _selectedLamp; // 17. 램프
+  String? _selectedPanelOperation; // 18. 배전반동작
 
-  // 2. 소음발생여부 옵션
+  // 단전 상태 추적 (나머지 필드 활성화/비활성화 제어)
+  bool get _isDisconnected => _selectedElectricalConnection == '단전';
+
+  // 1. 전기연결 옵션 (최우선 필드)
+  final List<String> _connectionOptions = ['선택', '연결', '단전'];
+
+  // 3. 소음발생여부 옵션
   final List<String> _noiseOptions = ['선택', '유', '무', '확인불가'];
 
-  // 3. 작동상태 옵션
+  // 4. 작동상태 옵션
   final List<String> _operationOptions = ['선택', '양호', '작동불량', '고장', '일반펌프', '펌프시설없음', '미설치', '확인불가'];
 
-  // 4. 유량 옵션
+  // 5. 유량 옵션
   final List<String> _flowRateOptions = ['선택', '적정', '수량적음', '확인불가'];
 
-  // 5-9. 배전함 관련 옵션
-  final List<String> _boxExteriorOptions = ['선택', '양호', '불량', '노후', '파손', '녹발생', '미설치'];
-  final List<String> _installationOptions = ['선택', '양호', '불량'];
-  final List<String> _connectionOptions = ['선택', '연결', '단전'];
-  final List<String> _terminalOptions = ['선택', '양호', '불량'];
+  // 6-10. 배전함 관련 옵션
+  final List<String> _boxExteriorOptions = ['선택', '양호', '불량', '노후', '파손', '녹발생', '미설치', '확인불가'];
+  final List<String> _installationOptions = ['선택', '양호', '불량', '확인불가'];
+  final List<String> _terminalOptions = ['선택', '양호', '불량', '확인불가'];
 
-  // 12-16. 계기기 옵션
+  // 13-17. 계기기 옵션
   final List<String> _instrumentOptions = ['선택', '정상', '고장', '확인불가'];
 
-  // 17. 배전반동작 옵션
-  final List<String> _panelOperationOptions = ['선택', '양호', '고장', '작동불량', '미설치', '계기류고장(V)', '계기류고장(A)', '계기류고장(V,A)'];
+  // 18. 배전반동작 옵션
+  final List<String> _panelOperationOptions = ['선택', '양호', '고장', '작동불량', '미설치', '계기류고장(V)', '계기류고장(A)', '계기류고장(V,A)', '확인불가'];
 
   @override
   void initState() {
@@ -87,6 +93,99 @@ class _InspectionPage3State extends State<InspectionPage3> {
         _insulationResistanceController.text = formatted;
       });
       viewModel.pumpIr = "'$formatted"; // CSV용 앞에 ' 추가
+    }
+  }
+
+  /// 전기연결 상태 변경 시 나머지 필드 초기화 (단전 시)
+  void _handleElectricalConnectionChanged(String? value, InspectionViewModel viewModel) {
+    setState(() => _selectedElectricalConnection = value);
+    viewModel.pumpGr2 = (value == '선택') ? null : value;
+
+    // 단전 선택 시: 모든 필드를 "확인불가"로 설정
+    if (value == '단전') {
+      // 숫자 입력 필드 초기화
+      _insulationResistanceController.clear();
+      _voltageController.clear();
+      _currentController.clear();
+      
+      setState(() {
+        _insulationResistanceUnavailable = true;
+        _voltageUnavailable = true;
+        _currentUnavailable = true;
+        
+        // Dropdown 값들도 "확인불가"로 설정
+        _selectedNoise = '확인불가';
+        _selectedOperationStatus = '확인불가';
+        _selectedFlowRate = '확인불가';
+        _selectedBoxExterior = '확인불가';
+        _selectedInstallation = '확인불가';
+        _selectedGroundTerminal = '확인불가';
+        _selectedInsulationTerminal = '확인불가';
+        _selectedFuse = '확인불가';
+        _selectedFloatless = '확인불가';
+        _selectedEOCR = '확인불가';
+        _selectedMagnetic = '확인불가';
+        _selectedLamp = '확인불가';
+        _selectedPanelOperation = '확인불가';
+      });
+      
+      // ViewModel 업데이트
+      viewModel.pumpIr = '확인불가';
+      viewModel.wtPipeCor2 = '확인불가';
+      viewModel.pumpOpSt = '확인불가';
+      viewModel.pumpFlow = '확인불가';
+      viewModel.switchboxLook = '확인불가';
+      viewModel.switchboxInst = '확인불가';
+      viewModel.switchboxGr = '확인불가';
+      viewModel.switchboxIr = '확인불가';
+      viewModel.gpumpNoise2 = '확인불가';
+      viewModel.gpumpGr2 = '확인불가';
+      viewModel.gpumpIr2 = '확인불가';
+      viewModel.switchboxLook2 = '확인불가';
+      viewModel.switchboxInst2 = '확인불가';
+      viewModel.switchboxGr2 = '확인불가';
+      viewModel.switchboxIr2 = '확인불가';
+      viewModel.switchboxMov = '확인불가';
+    } else if (value == '연결') {
+      // 연결 선택 시: "확인불가"였던 필드들을 초기화 (입력 전 상태로 복원)
+      setState(() {
+        _insulationResistanceUnavailable = false;
+        _voltageUnavailable = false;
+        _currentUnavailable = false;
+        
+        // Dropdown을 "선택"으로 초기화 (null로 저장됨)
+        _selectedNoise = null;
+        _selectedOperationStatus = null;
+        _selectedFlowRate = null;
+        _selectedBoxExterior = null;
+        _selectedInstallation = null;
+        _selectedGroundTerminal = null;
+        _selectedInsulationTerminal = null;
+        _selectedFuse = null;
+        _selectedFloatless = null;
+        _selectedEOCR = null;
+        _selectedMagnetic = null;
+        _selectedLamp = null;
+        _selectedPanelOperation = null;
+      });
+      
+      // ViewModel을 null로 초기화 (입력 전 상태)
+      viewModel.pumpIr = null;
+      viewModel.wtPipeCor2 = null;
+      viewModel.pumpOpSt = null;
+      viewModel.pumpFlow = null;
+      viewModel.switchboxLook = null;
+      viewModel.switchboxInst = null;
+      viewModel.switchboxGr = null;
+      viewModel.switchboxIr = null;
+      viewModel.gpumpNoise2 = null;
+      viewModel.gpumpGr2 = null;
+      viewModel.gpumpIr2 = null;
+      viewModel.switchboxLook2 = null;
+      viewModel.switchboxInst2 = null;
+      viewModel.switchboxGr2 = null;
+      viewModel.switchboxIr2 = null;
+      viewModel.switchboxMov = null;
     }
   }
 
@@ -203,19 +302,41 @@ class _InspectionPage3State extends State<InspectionPage3> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ===== 1. 전기연결 (최상단 필드 - 단전 시 나머지 필드 비활성화) =====
+              _buildSectionHeader('전원 접속 상태'),
+              const SizedBox(height: 16),
+              
+              _buildInfoCard(
+                '1. 전기연결',
+                DropdownButtonFormField<String>(
+                  value: _selectedElectricalConnection,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    helperText: '단전 선택 시 모든 하위 항목이 "확인불가"로 자동 설정됩니다',
+                    helperMaxLines: 2,
+                  ),
+                  items: _connectionOptions.map((status) {
+                    return DropdownMenuItem(value: status, child: Text(status));
+                  }).toList(),
+                  onChanged: (value) => _handleElectricalConnectionChanged(value, viewModel),
+                ),
+              ),
+
+              const SizedBox(height: 24),
               _buildSectionHeader('수중모터'),
               const SizedBox(height: 16),
 
-              // 1. 절연저항 (숫자 + 확인불가 + 자동 포맷팅)
+              // 2. 절연저항 (숫자 + 확인불가 + 자동 포맷팅)
               _buildInfoCard(
-                '1. 절연저항',
+                '2. 절연저항',
                 Row(
                   children: [
                     Expanded(
                       child: TextField(
                         controller: _insulationResistanceController,
                         focusNode: _insulationResistanceFocusNode,
-                        enabled: !_insulationResistanceUnavailable,
+                        enabled: !_insulationResistanceUnavailable && !_isDisconnected,
                         decoration: InputDecoration(
                           hintText: _insulationResistanceUnavailable ? '확인불가' : '숫자 입력 (포커스 해제 시 자동 포맷: 30 → 30/30/30)',
                           border: const OutlineInputBorder(),
@@ -236,7 +357,7 @@ class _InspectionPage3State extends State<InspectionPage3> {
                       children: [
                         Checkbox(
                           value: _insulationResistanceUnavailable,
-                          onChanged: (checked) {
+                          onChanged: _isDisconnected ? null : (checked) {
                             setState(() => _insulationResistanceUnavailable = checked ?? false);
                             if (checked == true) {
                               _insulationResistanceController.clear();
@@ -253,9 +374,9 @@ class _InspectionPage3State extends State<InspectionPage3> {
                 ),
               ),
 
-              // 2. 소음발생여부
+              // 3. 소음발생여부
               _buildInfoCard(
-                '2. 소음발생여부',
+                '3. 소음발생여부',
                 DropdownButtonFormField<String>(
                   value: _selectedNoise,
                   decoration: const InputDecoration(
@@ -265,16 +386,16 @@ class _InspectionPage3State extends State<InspectionPage3> {
                   items: _noiseOptions.map((option) {
                     return DropdownMenuItem(value: option, child: Text(option));
                   }).toList(),
-                  onChanged: (value) {
+                  onChanged: _isDisconnected ? null : (value) {
                     setState(() => _selectedNoise = value);
-                    viewModel.wtPipeCor2 = value;
+                    viewModel.wtPipeCor2 = (value == '선택') ? null : value;
                   },
                 ),
               ),
 
-              // 3. 작동상태
+              // 4. 작동상태
               _buildInfoCard(
-                '3. 작동상태',
+                '4. 작동상태',
                 DropdownButtonFormField<String>(
                   value: _selectedOperationStatus,
                   decoration: const InputDecoration(
@@ -284,16 +405,16 @@ class _InspectionPage3State extends State<InspectionPage3> {
                   items: _operationOptions.map((status) {
                     return DropdownMenuItem(value: status, child: Text(status));
                   }).toList(),
-                  onChanged: (value) {
+                  onChanged: _isDisconnected ? null : (value) {
                     setState(() => _selectedOperationStatus = value);
-                    viewModel.pumpOpSt = value;
+                    viewModel.pumpOpSt = (value == '선택') ? null : value;
                   },
                 ),
               ),
 
-              // 4. 유량
+              // 5. 유량
               _buildInfoCard(
-                '4. 유량',
+                '5. 유량',
                 DropdownButtonFormField<String>(
                   value: _selectedFlowRate,
                   decoration: const InputDecoration(
@@ -303,9 +424,9 @@ class _InspectionPage3State extends State<InspectionPage3> {
                   items: _flowRateOptions.map((status) {
                     return DropdownMenuItem(value: status, child: Text(status));
                   }).toList(),
-                  onChanged: (value) {
+                  onChanged: _isDisconnected ? null : (value) {
                     setState(() => _selectedFlowRate = value);
-                    viewModel.pumpFlow = value;
+                    viewModel.pumpFlow = (value == '선택') ? null : value;
                   },
                 ),
               ),
@@ -314,9 +435,9 @@ class _InspectionPage3State extends State<InspectionPage3> {
               _buildSectionHeader('배전함'),
               const SizedBox(height: 16),
 
-              // 5. 배전함외형
+              // 6. 배전함외형
               _buildInfoCard(
-                '5. 배전함외형',
+                '6. 배전함외형',
                 DropdownButtonFormField<String>(
                   value: _selectedBoxExterior,
                   decoration: const InputDecoration(
@@ -326,16 +447,16 @@ class _InspectionPage3State extends State<InspectionPage3> {
                   items: _boxExteriorOptions.map((status) {
                     return DropdownMenuItem(value: status, child: Text(status));
                   }).toList(),
-                  onChanged: (value) {
+                  onChanged: _isDisconnected ? null : (value) {
                     setState(() => _selectedBoxExterior = value);
-                    viewModel.switchboxLook = value;
+                    viewModel.switchboxLook = (value == '선택') ? null : value;
                   },
                 ),
               ),
 
-              // 6. 설치
+              // 7. 설치
               _buildInfoCard(
-                '6. 설치',
+                '7. 설치',
                 DropdownButtonFormField<String>(
                   value: _selectedInstallation,
                   decoration: const InputDecoration(
@@ -345,31 +466,14 @@ class _InspectionPage3State extends State<InspectionPage3> {
                   items: _installationOptions.map((status) {
                     return DropdownMenuItem(value: status, child: Text(status));
                   }).toList(),
-                  onChanged: (value) {
+                  onChanged: _isDisconnected ? null : (value) {
                     setState(() => _selectedInstallation = value);
-                    viewModel.switchboxInst = value;
+                    viewModel.switchboxInst = (value == '선택') ? null : value;
                   },
                 ),
               ),
 
-              // 7. 전기연결
-              _buildInfoCard(
-                '7. 전기연결',
-                DropdownButtonFormField<String>(
-                  value: _selectedElectricalConnection,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  ),
-                  items: _connectionOptions.map((status) {
-                    return DropdownMenuItem(value: status, child: Text(status));
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() => _selectedElectricalConnection = value);
-                    viewModel.pumpGr2 = value;
-                  },
-                ),
-              ),
+
 
               // 8. 접지단자
               _buildInfoCard(
@@ -383,9 +487,9 @@ class _InspectionPage3State extends State<InspectionPage3> {
                   items: _terminalOptions.map((status) {
                     return DropdownMenuItem(value: status, child: Text(status));
                   }).toList(),
-                  onChanged: (value) {
+                  onChanged: _isDisconnected ? null : (value) {
                     setState(() => _selectedGroundTerminal = value);
-                    viewModel.switchboxGr = value;
+                    viewModel.switchboxGr = (value == '선택') ? null : value;
                   },
                 ),
               ),
@@ -402,56 +506,102 @@ class _InspectionPage3State extends State<InspectionPage3> {
                   items: _terminalOptions.map((status) {
                     return DropdownMenuItem(value: status, child: Text(status));
                   }).toList(),
-                  onChanged: (value) {
+                  onChanged: _isDisconnected ? null : (value) {
                     setState(() => _selectedInsulationTerminal = value);
-                    viewModel.switchboxIr = value;
+                    viewModel.switchboxIr = (value == '선택') ? null : value;
                   },
                 ),
               ),
 
               // 10. 지시전압 (숫자 + 확인불가)
-              _buildNumberFieldWithCheckbox(
-                label: '10. 지시전압',
-                controller: _voltageController,
-                isUnavailable: _voltageUnavailable,
-                unit: 'V',
-                onCheckboxChanged: (checked) {
-                  setState(() => _voltageUnavailable = checked ?? false);
-                  if (checked == true) {
-                    _voltageController.clear();
-                    viewModel.gpumpNoise2 = '확인불가';
-                  } else {
-                    viewModel.gpumpNoise2 = null;
-                  }
-                },
-                onFieldChanged: (value) => viewModel.gpumpNoise2 = value,
+              _buildInfoCard(
+                '10. 지시전압',
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _voltageController,
+                        enabled: !_voltageUnavailable && !_isDisconnected,
+                        decoration: InputDecoration(
+                          hintText: _voltageUnavailable ? '확인불가' : '숫자 입력',
+                          border: const OutlineInputBorder(),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          suffixText: 'V',
+                        ),
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        onChanged: (value) => viewModel.gpumpNoise2 = value,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: _voltageUnavailable,
+                          onChanged: _isDisconnected ? null : (checked) {
+                            setState(() => _voltageUnavailable = checked ?? false);
+                            if (checked == true) {
+                              _voltageController.clear();
+                              viewModel.gpumpNoise2 = '확인불가';
+                            } else {
+                              viewModel.gpumpNoise2 = null;
+                            }
+                          },
+                        ),
+                        const Text('확인불가'),
+                      ],
+                    ),
+                  ],
+                ),
               ),
 
               // 11. 지시전류 (숫자 + 확인불가)
-              _buildNumberFieldWithCheckbox(
-                label: '11. 지시전류',
-                controller: _currentController,
-                isUnavailable: _currentUnavailable,
-                unit: 'A',
-                onCheckboxChanged: (checked) {
-                  setState(() => _currentUnavailable = checked ?? false);
-                  if (checked == true) {
-                    _currentController.clear();
-                    viewModel.gpumpGr2 = '확인불가';
-                  } else {
-                    viewModel.gpumpGr2 = null;
-                  }
-                },
-                onFieldChanged: (value) => viewModel.gpumpGr2 = value,
+              _buildInfoCard(
+                '11. 지시전류',
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _currentController,
+                        enabled: !_currentUnavailable && !_isDisconnected,
+                        decoration: InputDecoration(
+                          hintText: _currentUnavailable ? '확인불가' : '숫자 입력',
+                          border: const OutlineInputBorder(),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          suffixText: 'A',
+                        ),
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        onChanged: (value) => viewModel.gpumpGr2 = value,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: _currentUnavailable,
+                          onChanged: _isDisconnected ? null : (checked) {
+                            setState(() => _currentUnavailable = checked ?? false);
+                            if (checked == true) {
+                              _currentController.clear();
+                              viewModel.gpumpGr2 = '확인불가';
+                            } else {
+                              viewModel.gpumpGr2 = null;
+                            }
+                          },
+                        ),
+                        const Text('확인불가'),
+                      ],
+                    ),
+                  ],
+                ),
               ),
 
               const SizedBox(height: 24),
               _buildSectionHeader('계기기'),
               const SizedBox(height: 16),
 
-              // 12. 휴즈
+              // 13. 휴즈
               _buildInfoCard(
-                '12. 휴즈',
+                '13. 휴즈',
                 DropdownButtonFormField<String>(
                   value: _selectedFuse,
                   decoration: const InputDecoration(
@@ -461,16 +611,16 @@ class _InspectionPage3State extends State<InspectionPage3> {
                   items: _instrumentOptions.map((status) {
                     return DropdownMenuItem(value: status, child: Text(status));
                   }).toList(),
-                  onChanged: (value) {
+                  onChanged: _isDisconnected ? null : (value) {
                     setState(() => _selectedFuse = value);
-                    viewModel.gpumpIr2 = value;
+                    viewModel.gpumpIr2 = (value == '선택') ? null : value;
                   },
                 ),
               ),
 
-              // 13. Floatless
+              // 14. Floatless
               _buildInfoCard(
-                '13. Floatless',
+                '14. Floatless',
                 DropdownButtonFormField<String>(
                   value: _selectedFloatless,
                   decoration: const InputDecoration(
@@ -480,16 +630,16 @@ class _InspectionPage3State extends State<InspectionPage3> {
                   items: _instrumentOptions.map((status) {
                     return DropdownMenuItem(value: status, child: Text(status));
                   }).toList(),
-                  onChanged: (value) {
+                  onChanged: _isDisconnected ? null : (value) {
                     setState(() => _selectedFloatless = value);
-                    viewModel.switchboxLook2 = value;
+                    viewModel.switchboxLook2 = (value == '선택') ? null : value;
                   },
                 ),
               ),
 
-              // 14. EOCR
+              // 15. EOCR
               _buildInfoCard(
-                '14. EOCR',
+                '15. EOCR',
                 DropdownButtonFormField<String>(
                   value: _selectedEOCR,
                   decoration: const InputDecoration(
@@ -499,16 +649,16 @@ class _InspectionPage3State extends State<InspectionPage3> {
                   items: _instrumentOptions.map((status) {
                     return DropdownMenuItem(value: status, child: Text(status));
                   }).toList(),
-                  onChanged: (value) {
+                  onChanged: _isDisconnected ? null : (value) {
                     setState(() => _selectedEOCR = value);
-                    viewModel.switchboxInst2 = value;
+                    viewModel.switchboxInst2 = (value == '선택') ? null : value;
                   },
                 ),
               ),
 
-              // 15. 마그네틱
+              // 16. 마그네틱
               _buildInfoCard(
-                '15. 마그네틱',
+                '16. 마그네틱',
                 DropdownButtonFormField<String>(
                   value: _selectedMagnetic,
                   decoration: const InputDecoration(
@@ -518,16 +668,16 @@ class _InspectionPage3State extends State<InspectionPage3> {
                   items: _instrumentOptions.map((status) {
                     return DropdownMenuItem(value: status, child: Text(status));
                   }).toList(),
-                  onChanged: (value) {
+                  onChanged: _isDisconnected ? null : (value) {
                     setState(() => _selectedMagnetic = value);
-                    viewModel.switchboxGr2 = value;
+                    viewModel.switchboxGr2 = (value == '선택') ? null : value;
                   },
                 ),
               ),
 
-              // 16. 램프
+              // 17. 램프
               _buildInfoCard(
-                '16. 램프',
+                '17. 램프',
                 DropdownButtonFormField<String>(
                   value: _selectedLamp,
                   decoration: const InputDecoration(
@@ -537,9 +687,9 @@ class _InspectionPage3State extends State<InspectionPage3> {
                   items: _instrumentOptions.map((status) {
                     return DropdownMenuItem(value: status, child: Text(status));
                   }).toList(),
-                  onChanged: (value) {
+                  onChanged: _isDisconnected ? null : (value) {
                     setState(() => _selectedLamp = value);
-                    viewModel.switchboxIr2 = value;
+                    viewModel.switchboxIr2 = (value == '선택') ? null : value;
                   },
                 ),
               ),
@@ -548,9 +698,9 @@ class _InspectionPage3State extends State<InspectionPage3> {
               _buildSectionHeader('배전반'),
               const SizedBox(height: 16),
 
-              // 17. 배전반동작
+              // 18. 배전반동작
               _buildInfoCard(
-                '17. 배전반동작',
+                '18. 배전반동작',
                 DropdownButtonFormField<String>(
                   value: _selectedPanelOperation,
                   decoration: const InputDecoration(
@@ -560,9 +710,9 @@ class _InspectionPage3State extends State<InspectionPage3> {
                   items: _panelOperationOptions.map((status) {
                     return DropdownMenuItem(value: status, child: Text(status));
                   }).toList(),
-                  onChanged: (value) {
+                  onChanged: _isDisconnected ? null : (value) {
                     setState(() => _selectedPanelOperation = value);
-                    viewModel.switchboxMov = value;
+                    viewModel.switchboxMov = (value == '선택') ? null : value;
                   },
                 ),
               ),

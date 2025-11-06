@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../auth/login_screen.dart';
 import '../inspection/inspection_form_screen.dart';
+import '../inspection/inspection_history_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -105,9 +106,10 @@ class HomeScreen extends StatelessWidget {
                 // 점검 이력 버튼
                 InkWell(
                   onTap: () {
-                    // TODO: 점검 이력 화면으로 이동
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('점검 이력 화면은 준비 중입니다')),
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const InspectionHistoryScreen(),
+                      ),
                     );
                   },
                   child: Container(

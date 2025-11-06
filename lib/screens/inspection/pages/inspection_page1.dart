@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../viewmodels/inspection_viewmodel.dart';
 
 /// Page 1: 기본정보 (15개 필드)
@@ -18,12 +18,6 @@ class _InspectionPage1State extends State<InspectionPage1> {
   final _facilityNumberController = TextEditingController();
   final _inspectorController = TextEditingController();
   final _dateController = TextEditingController();
-  final _gpsLongitude1Controller = TextEditingController(); // 경도 도
-  final _gpsLongitude2Controller = TextEditingController(); // 경도 분
-  final _gpsLongitude3Controller = TextEditingController(); // 경도 초
-  final _gpsLatitude1Controller = TextEditingController(); // 위도 도
-  final _gpsLatitude2Controller = TextEditingController(); // 위도 분
-  final _gpsLatitude3Controller = TextEditingController(); // 위도 초
 
   String? _selectedRegion; // 선택된 지역
   String? _selectedYangsuType; // 양수장 형태
@@ -37,7 +31,6 @@ class _InspectionPage1State extends State<InspectionPage1> {
   List<String> _selectedLeaks = []; // 누수 (Multi-select)
   List<String> _selectedSubsidence = []; // 침하 (Multi-select)
 
-  bool _isLoadingGps = false;
   bool _isLoadingUser = true;
 
   // 12개 지역 매핑
@@ -107,6 +100,39 @@ class _InspectionPage1State extends State<InspectionPage1> {
     super.initState();
     _loadUserData();
     _loadViewModelData();
+    _loadLastRegion(); // 이전 선택 지역 로드
+  }
+
+  @override
+  void didUpdateWidget(InspectionPage1 oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 위젯이 재생성될 때마다 ViewModel 데이터 다시 로드
+    _loadViewModelData();
+  }
+
+  /// 이전에 선택한 지역 로드
+  Future<void> _loadLastRegion() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastRegion = prefs.getString('last_selected_region');
+      if (lastRegion != null && _regionCodes.containsKey(lastRegion)) {
+        setState(() {
+          _selectedRegion = lastRegion;
+        });
+      }
+    } catch (e) {
+      // 무시 (오류가 있어도 동작에 영향 없음)
+    }
+  }
+
+  /// 선택한 지역 저장
+  Future<void> _saveLastRegion(String region) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('last_selected_region', region);
+    } catch (e) {
+      // 무시
+    }
   }
 
   /// Firebase에서 로그인한 사용자 정보 가져오기
@@ -172,26 +198,6 @@ class _InspectionPage1State extends State<InspectionPage1> {
         _inspectorController.text = viewModel.inspector!;
       }
 
-      // GPS 데이터 로드
-      if (viewModel.gpsLongitude1 != null) {
-        _gpsLongitude1Controller.text = viewModel.gpsLongitude1!;
-      }
-      if (viewModel.gpsLongitude2 != null) {
-        _gpsLongitude2Controller.text = viewModel.gpsLongitude2!;
-      }
-      if (viewModel.gpsLongitude3 != null) {
-        _gpsLongitude3Controller.text = viewModel.gpsLongitude3!;
-      }
-      if (viewModel.gpsLatitude1 != null) {
-        _gpsLatitude1Controller.text = viewModel.gpsLatitude1!;
-      }
-      if (viewModel.gpsLatitude2 != null) {
-        _gpsLatitude2Controller.text = viewModel.gpsLatitude2!;
-      }
-      if (viewModel.gpsLatitude3 != null) {
-        _gpsLatitude3Controller.text = viewModel.gpsLatitude3!;
-      }
-
       setState(() {
         _selectedYangsuType = viewModel.yangsuType;
         _selectedDoor = viewModel.chkSphere2;
@@ -213,86 +219,6 @@ class _InspectionPage1State extends State<InspectionPage1> {
         }
       });
     });
-  }
-
-  /// GPS 위치 가져오기
-  Future<void> _getCurrentLocation() async {
-    setState(() => _isLoadingGps = true);
-
-    try {
-      // 위치 권한 확인
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          throw Exception('위치 권한이 거부되었습니다');
-        }
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        throw Exception('위치 권한이 영구적으로 거부되었습니다');
-      }
-
-      // 현재 위치 가져오기 (모바일 호환)
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 10),
-      );
-
-      // 위도/경도를 도분초로 변환
-      _convertToDMS(position.latitude, position.longitude);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('GPS 좌표를 가져왔습니다'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('GPS 오류: $e')),
-        );
-      }
-    } finally {
-      setState(() => _isLoadingGps = false);
-    }
-  }
-
-  /// 십진법 좌표를 도분초(DMS)로 변환
-  void _convertToDMS(double latitude, double longitude) {
-    final viewModel = Provider.of<InspectionViewModel>(context, listen: false);
-
-    // 경도 변환
-    int lonDeg = longitude.abs().floor();
-    double lonMinDecimal = (longitude.abs() - lonDeg) * 60;
-    int lonMin = lonMinDecimal.floor();
-    double lonSec = (lonMinDecimal - lonMin) * 60;
-
-    // 위도 변환
-    int latDeg = latitude.abs().floor();
-    double latMinDecimal = (latitude.abs() - latDeg) * 60;
-    int latMin = latMinDecimal.floor();
-    double latSec = (latMinDecimal - latMin) * 60;
-
-    setState(() {
-      _gpsLongitude1Controller.text = lonDeg.toString();
-      _gpsLongitude2Controller.text = lonMin.toString();
-      _gpsLongitude3Controller.text = lonSec.toStringAsFixed(2);
-      _gpsLatitude1Controller.text = latDeg.toString();
-      _gpsLatitude2Controller.text = latMin.toString();
-      _gpsLatitude3Controller.text = latSec.toStringAsFixed(2);
-    });
-
-    // ViewModel 업데이트
-    viewModel.gpsLongitude1 = lonDeg.toString();
-    viewModel.gpsLongitude2 = lonMin.toString();
-    viewModel.gpsLongitude3 = lonSec.toStringAsFixed(2);
-    viewModel.gpsLatitude1 = latDeg.toString();
-    viewModel.gpsLatitude2 = latMin.toString();
-    viewModel.gpsLatitude3 = latSec.toStringAsFixed(2);
   }
 
   /// 점검일자 선택
@@ -380,12 +306,6 @@ class _InspectionPage1State extends State<InspectionPage1> {
     _facilityNumberController.dispose();
     _inspectorController.dispose();
     _dateController.dispose();
-    _gpsLongitude1Controller.dispose();
-    _gpsLongitude2Controller.dispose();
-    _gpsLongitude3Controller.dispose();
-    _gpsLatitude1Controller.dispose();
-    _gpsLatitude2Controller.dispose();
-    _gpsLatitude3Controller.dispose();
     super.dispose();
   }
 
@@ -416,6 +336,9 @@ class _InspectionPage1State extends State<InspectionPage1> {
                   }).toList(),
                   onChanged: (value) {
                     setState(() => _selectedRegion = value);
+                    if (value != null) {
+                      _saveLastRegion(value); // 선택한 지역 저장
+                    }
                     _updateWellId();
                   },
                 ),
@@ -531,143 +454,7 @@ class _InspectionPage1State extends State<InspectionPage1> {
                 ),
               ),
 
-              // 5. 위치좌표 (GPS 정보)
-              _buildSectionHeader('5. 위치좌표 (GPS 정보)'),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: _isLoadingGps ? null : _getCurrentLocation,
-                              icon: _isLoadingGps
-                                  ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : const Icon(Icons.gps_fixed),
-                              label: Text(_isLoadingGps ? 'GPS 가져오는 중...' : '현재 위치 가져오기'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-
-                      // 경도 입력
-                      Row(
-                        children: [
-                          const SizedBox(
-                            width: 60,
-                            child: Text('경도', style: TextStyle(fontWeight: FontWeight.bold)),
-                          ),
-                          Expanded(
-                            child: TextField(
-                              controller: _gpsLongitude1Controller,
-                              decoration: const InputDecoration(
-                                hintText: '도',
-                                border: OutlineInputBorder(),
-                                contentPadding: EdgeInsets.all(8),
-                              ),
-                              keyboardType: TextInputType.number,
-                              onChanged: (value) => viewModel.gpsLongitude1 = value,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: TextField(
-                              controller: _gpsLongitude2Controller,
-                              decoration: const InputDecoration(
-                                hintText: '분',
-                                border: OutlineInputBorder(),
-                                contentPadding: EdgeInsets.all(8),
-                              ),
-                              keyboardType: TextInputType.number,
-                              onChanged: (value) => viewModel.gpsLongitude2 = value,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: TextField(
-                              controller: _gpsLongitude3Controller,
-                              decoration: const InputDecoration(
-                                hintText: '초',
-                                border: OutlineInputBorder(),
-                                contentPadding: EdgeInsets.all(8),
-                              ),
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                              onChanged: (value) => viewModel.gpsLongitude3 = value,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-
-                      // 위도 입력
-                      Row(
-                        children: [
-                          const SizedBox(
-                            width: 60,
-                            child: Text('위도', style: TextStyle(fontWeight: FontWeight.bold)),
-                          ),
-                          Expanded(
-                            child: TextField(
-                              controller: _gpsLatitude1Controller,
-                              decoration: const InputDecoration(
-                                hintText: '도',
-                                border: OutlineInputBorder(),
-                                contentPadding: EdgeInsets.all(8),
-                              ),
-                              keyboardType: TextInputType.number,
-                              onChanged: (value) => viewModel.gpsLatitude1 = value,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: TextField(
-                              controller: _gpsLatitude2Controller,
-                              decoration: const InputDecoration(
-                                hintText: '분',
-                                border: OutlineInputBorder(),
-                                contentPadding: EdgeInsets.all(8),
-                              ),
-                              keyboardType: TextInputType.number,
-                              onChanged: (value) => viewModel.gpsLatitude2 = value,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: TextField(
-                              controller: _gpsLatitude3Controller,
-                              decoration: const InputDecoration(
-                                hintText: '초',
-                                border: OutlineInputBorder(),
-                                contentPadding: EdgeInsets.all(8),
-                              ),
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                              onChanged: (value) => viewModel.gpsLatitude3 = value,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // 6. 양수장 형태
+              // 5. 양수장 형태
               _buildInfoCard(
                 '6. 양수장 형태',
                 DropdownButtonFormField<String>(
@@ -695,9 +482,9 @@ class _InspectionPage1State extends State<InspectionPage1> {
                 ),
               ),
 
-              // 7. 양수장 출입문 (조건부)
+              // 6. 양수장 출입문 (조건부)
               _buildInfoCard(
-                '7. 양수장 출입문',
+                '6. 양수장 출입문',
                 DropdownButtonFormField<String>(
                   value: _selectedDoor,
                   decoration: const InputDecoration(
@@ -716,9 +503,9 @@ class _InspectionPage1State extends State<InspectionPage1> {
                 ),
               ),
 
-              // 8. 양수장 장옥덮개 (조건부)
+              // 7. 양수장 장옥덮개 (조건부)
               _buildInfoCard(
-                '8. 양수장 장옥덮개',
+                '7. 양수장 장옥덮개',
                 DropdownButtonFormField<String>(
                   value: _selectedCover,
                   decoration: const InputDecoration(
@@ -732,14 +519,15 @@ class _InspectionPage1State extends State<InspectionPage1> {
                   }).toList(),
                   onChanged: (value) {
                     setState(() => _selectedCover = value);
-                    viewModel.constDate2 = value;
+                    // '선택'을 선택하면 null로 저장
+                    viewModel.constDate2 = (value == '선택') ? null : value;
                   },
                 ),
               ),
 
-              // 9. 장옥덮개 부식도
+              // 8. 장옥덮개 부식도
               _buildInfoCard(
-                '9. 장옥덮개 부식도',
+                '8. 장옥덮개 부식도',
                 DropdownButtonFormField<String>(
                   value: _selectedCorrosion,
                   decoration: const InputDecoration(
@@ -751,14 +539,15 @@ class _InspectionPage1State extends State<InspectionPage1> {
                   }).toList(),
                   onChanged: (value) {
                     setState(() => _selectedCorrosion = value);
-                    viewModel.polprtCovcorSt = value;
+                    // '선택'을 선택하면 null로 저장
+                    viewModel.polprtCovcorSt = (value == '선택') ? null : value;
                   },
                 ),
               ),
 
-              // 10. 스마트 안내문
+              // 9. 스마트 안내문
               _buildInfoCard(
-                '10. 스마트 안내문',
+                '9. 스마트 안내문',
                 DropdownButtonFormField<String>(
                   value: _selectedSmartSign,
                   decoration: const InputDecoration(
@@ -775,9 +564,9 @@ class _InspectionPage1State extends State<InspectionPage1> {
                 ),
               ),
 
-              // 11. 관정덮개
+              // 10. 관정덮개
               _buildInfoCard(
-                '11. 관정덮개',
+                '10. 관정덮개',
                 DropdownButtonFormField<String>(
                   value: _selectedWellCover,
                   decoration: const InputDecoration(
@@ -794,9 +583,9 @@ class _InspectionPage1State extends State<InspectionPage1> {
                 ),
               ),
 
-              // 12. 이물질 배출여부
+              // 11. 이물질 배출여부
               _buildInfoCard(
-                '12. 이물질 배출여부',
+                '11. 이물질 배출여부',
                 DropdownButtonFormField<String>(
                   value: _selectedForeignSub,
                   decoration: const InputDecoration(
@@ -813,9 +602,9 @@ class _InspectionPage1State extends State<InspectionPage1> {
                 ),
               ),
 
-              // 13. 균열 (Multi-select)
+              // 12. 균열 (Multi-select)
               _buildInfoCard(
-                '13. 균열',
+                '12. 균열',
                 InkWell(
                   onTap: () {
                     _showMultiSelectDialog(
@@ -855,9 +644,9 @@ class _InspectionPage1State extends State<InspectionPage1> {
                 ),
               ),
 
-              // 14. 누수 (Multi-select)
+              // 13. 누수 (Multi-select)
               _buildInfoCard(
-                '14. 누수',
+                '13. 누수',
                 InkWell(
                   onTap: () {
                     _showMultiSelectDialog(
@@ -897,9 +686,9 @@ class _InspectionPage1State extends State<InspectionPage1> {
                 ),
               ),
 
-              // 15. 침하 (Multi-select)
+              // 14. 침하 (Multi-select)
               _buildInfoCard(
-                '15. 침하',
+                '14. 침하',
                 InkWell(
                   onTap: () {
                     _showMultiSelectDialog(

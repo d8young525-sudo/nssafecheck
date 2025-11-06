@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 
 class InspectionViewModel extends ChangeNotifier {
-  // === Page 1 필드 (19개) ===
+  // === 편집 모드 상태 ===
+  bool _isEditMode = true; // 기본값: 편집 가능
+  bool get isEditMode => _isEditMode;
+  set isEditMode(bool value) {
+    _isEditMode = value;
+    notifyListeners();
+  }
+
+  // === Page 1 필드 (13개) - GPS 제거됨 ===
   String? _wellId;
   String? _inspector;
   String? _inspectDate;
-  String? _gpsLongitude1;
-  String? _gpsLongitude2;
-  String? _gpsLongitude3;
-  String? _gpsLatitude1;
-  String? _gpsLatitude2;
-  String? _gpsLatitude3;
   String? _yangsuType;
   String? _chkSphere2;
   String? _constDate2;
@@ -65,36 +67,12 @@ class InspectionViewModel extends ChangeNotifier {
   // === Page 4 필드 (1개) ===
   String? _other;
 
-  // === Page 5 사진 필드 (18개) ===
-  String? _photoPath1;
-  String? _photoPath2;
-  String? _photoPath3;
-  String? _photoPath4;
-  String? _photoPath5;
-  String? _photoPath6;
-  String? _photoPath7;
-  String? _photoPath8;
-  String? _photoPath9;
-  String? _photoPath10;
-  String? _photoPath11;
-  String? _photoPath12;
-  String? _photoPath13;
-  String? _photoPath14;
-  String? _photoPath15;
-  String? _photoPath16;
-  String? _photoPath17;
-  String? _photoPath18;
+
 
   // === Getters (Page 1) ===
   String? get wellId => _wellId;
   String? get inspector => _inspector;
   String? get inspectDate => _inspectDate;
-  String? get gpsLongitude1 => _gpsLongitude1;
-  String? get gpsLongitude2 => _gpsLongitude2;
-  String? get gpsLongitude3 => _gpsLongitude3;
-  String? get gpsLatitude1 => _gpsLatitude1;
-  String? get gpsLatitude2 => _gpsLatitude2;
-  String? get gpsLatitude3 => _gpsLatitude3;
   String? get yangsuType => _yangsuType;
   String? get chkSphere2 => _chkSphere2;
   String? get constDate2 => _constDate2;
@@ -149,25 +127,7 @@ class InspectionViewModel extends ChangeNotifier {
   // === Getters (Page 4) ===
   String? get other => _other;
 
-  // === Getters (Page 5) ===
-  String? get photoPath1 => _photoPath1;
-  String? get photoPath2 => _photoPath2;
-  String? get photoPath3 => _photoPath3;
-  String? get photoPath4 => _photoPath4;
-  String? get photoPath5 => _photoPath5;
-  String? get photoPath6 => _photoPath6;
-  String? get photoPath7 => _photoPath7;
-  String? get photoPath8 => _photoPath8;
-  String? get photoPath9 => _photoPath9;
-  String? get photoPath10 => _photoPath10;
-  String? get photoPath11 => _photoPath11;
-  String? get photoPath12 => _photoPath12;
-  String? get photoPath13 => _photoPath13;
-  String? get photoPath14 => _photoPath14;
-  String? get photoPath15 => _photoPath15;
-  String? get photoPath16 => _photoPath16;
-  String? get photoPath17 => _photoPath17;
-  String? get photoPath18 => _photoPath18;
+
 
   // === Setters (Page 1) ===
   set wellId(String? value) {
@@ -182,36 +142,6 @@ class InspectionViewModel extends ChangeNotifier {
 
   set inspectDate(String? value) {
     _inspectDate = value;
-    notifyListeners();
-  }
-
-  set gpsLongitude1(String? value) {
-    _gpsLongitude1 = value;
-    notifyListeners();
-  }
-
-  set gpsLongitude2(String? value) {
-    _gpsLongitude2 = value;
-    notifyListeners();
-  }
-
-  set gpsLongitude3(String? value) {
-    _gpsLongitude3 = value;
-    notifyListeners();
-  }
-
-  set gpsLatitude1(String? value) {
-    _gpsLatitude1 = value;
-    notifyListeners();
-  }
-
-  set gpsLatitude2(String? value) {
-    _gpsLatitude2 = value;
-    notifyListeners();
-  }
-
-  set gpsLatitude3(String? value) {
-    _gpsLatitude3 = value;
     notifyListeners();
   }
 
@@ -453,96 +383,7 @@ class InspectionViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // === Setters (Page 5) ===
-  set photoPath1(String? value) {
-    _photoPath1 = value;
-    notifyListeners();
-  }
 
-  set photoPath2(String? value) {
-    _photoPath2 = value;
-    notifyListeners();
-  }
-
-  set photoPath3(String? value) {
-    _photoPath3 = value;
-    notifyListeners();
-  }
-
-  set photoPath4(String? value) {
-    _photoPath4 = value;
-    notifyListeners();
-  }
-
-  set photoPath5(String? value) {
-    _photoPath5 = value;
-    notifyListeners();
-  }
-
-  set photoPath6(String? value) {
-    _photoPath6 = value;
-    notifyListeners();
-  }
-
-  set photoPath7(String? value) {
-    _photoPath7 = value;
-    notifyListeners();
-  }
-
-  set photoPath8(String? value) {
-    _photoPath8 = value;
-    notifyListeners();
-  }
-
-  set photoPath9(String? value) {
-    _photoPath9 = value;
-    notifyListeners();
-  }
-
-  set photoPath10(String? value) {
-    _photoPath10 = value;
-    notifyListeners();
-  }
-
-  set photoPath11(String? value) {
-    _photoPath11 = value;
-    notifyListeners();
-  }
-
-  set photoPath12(String? value) {
-    _photoPath12 = value;
-    notifyListeners();
-  }
-
-  set photoPath13(String? value) {
-    _photoPath13 = value;
-    notifyListeners();
-  }
-
-  set photoPath14(String? value) {
-    _photoPath14 = value;
-    notifyListeners();
-  }
-
-  set photoPath15(String? value) {
-    _photoPath15 = value;
-    notifyListeners();
-  }
-
-  set photoPath16(String? value) {
-    _photoPath16 = value;
-    notifyListeners();
-  }
-
-  set photoPath17(String? value) {
-    _photoPath17 = value;
-    notifyListeners();
-  }
-
-  set photoPath18(String? value) {
-    _photoPath18 = value;
-    notifyListeners();
-  }
 
   // === 초기화 메서드 ===
   void reset() {
@@ -550,12 +391,6 @@ class InspectionViewModel extends ChangeNotifier {
     _wellId = null;
     _inspector = null;
     _inspectDate = null;
-    _gpsLongitude1 = null;
-    _gpsLongitude2 = null;
-    _gpsLongitude3 = null;
-    _gpsLatitude1 = null;
-    _gpsLatitude2 = null;
-    _gpsLatitude3 = null;
     _yangsuType = null;
     _chkSphere2 = null;
     _constDate2 = null;
@@ -610,26 +445,6 @@ class InspectionViewModel extends ChangeNotifier {
     // Page 4
     _other = null;
 
-    // Page 5
-    _photoPath1 = null;
-    _photoPath2 = null;
-    _photoPath3 = null;
-    _photoPath4 = null;
-    _photoPath5 = null;
-    _photoPath6 = null;
-    _photoPath7 = null;
-    _photoPath8 = null;
-    _photoPath9 = null;
-    _photoPath10 = null;
-    _photoPath11 = null;
-    _photoPath12 = null;
-    _photoPath13 = null;
-    _photoPath14 = null;
-    _photoPath15 = null;
-    _photoPath16 = null;
-    _photoPath17 = null;
-    _photoPath18 = null;
-
     notifyListeners();
   }
 
@@ -640,12 +455,6 @@ class InspectionViewModel extends ChangeNotifier {
         'WELL_ID': _wellId,
         'INSPECTOR': _inspector,
         'INSPECT_DATE': _inspectDate,
-        'GPS_LONGITUDE_1': _gpsLongitude1,
-        'GPS_LONGITUDE_2': _gpsLongitude2,
-        'GPS_LONGITUDE_3': _gpsLongitude3,
-        'GPS_LATITUDE_1': _gpsLatitude1,
-        'GPS_LATITUDE_2': _gpsLatitude2,
-        'GPS_LATITUDE_3': _gpsLatitude3,
         'YANGSU_TYPE': _yangsuType,
         'CHK_SPHERE2': _chkSphere2,
         'CONST_DATE2': _constDate2,
@@ -699,26 +508,6 @@ class InspectionViewModel extends ChangeNotifier {
       },
       'assessment': {
         'OTHER': _other,
-      },
-      'photos': {
-        'PHOTO_PATH_1': _photoPath1,
-        'PHOTO_PATH_2': _photoPath2,
-        'PHOTO_PATH_3': _photoPath3,
-        'PHOTO_PATH_4': _photoPath4,
-        'PHOTO_PATH_5': _photoPath5,
-        'PHOTO_PATH_6': _photoPath6,
-        'PHOTO_PATH_7': _photoPath7,
-        'PHOTO_PATH_8': _photoPath8,
-        'PHOTO_PATH_9': _photoPath9,
-        'PHOTO_PATH_10': _photoPath10,
-        'PHOTO_PATH_11': _photoPath11,
-        'PHOTO_PATH_12': _photoPath12,
-        'PHOTO_PATH_13': _photoPath13,
-        'PHOTO_PATH_14': _photoPath14,
-        'PHOTO_PATH_15': _photoPath15,
-        'PHOTO_PATH_16': _photoPath16,
-        'PHOTO_PATH_17': _photoPath17,
-        'PHOTO_PATH_18': _photoPath18,
       },
     };
   }

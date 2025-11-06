@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'firebase_options.dart';
 import 'screens/auth/login_screen.dart';
+import 'models/inspection_model.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -10,6 +12,15 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  
+  // Hive 초기화
+  await Hive.initFlutter();
+  
+  // Hive Adapter 등록
+  Hive.registerAdapter(InspectionModelAdapter());
+  
+  // Hive Box 열기
+  await Hive.openBox<InspectionModel>('inspections');
   
   runApp(const MyApp());
 }
