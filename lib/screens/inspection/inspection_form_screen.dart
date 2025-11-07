@@ -307,8 +307,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen>
     bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('점검완료'),
-        content: const Text('점검을 완료하고 저장하시겠습니까?\n완료 후에는 수정할 수 없습니다.'),
+        title: const Text('저장'),
+        content: const Text('저장하시겠습니까?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -320,7 +320,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen>
               backgroundColor: Colors.blue,
               foregroundColor: Colors.white,
             ),
-            child: const Text('완료'),
+            child: const Text('저장'),
           ),
         ],
       ),

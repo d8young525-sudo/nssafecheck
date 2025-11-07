@@ -106,7 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: 300,
                     margin: const EdgeInsets.only(bottom: 24),
                     child: Image.asset(
-                      'assets/icons/kr_logo_white.png',
+                      'assets/icons/kr_logo_final.png',
                       fit: BoxFit.contain,
                     ),
                   ),

@@ -149,6 +149,7 @@ class InspectionExportService {
   }
 
   /// 표 형식 내보내기 (HTML 테이블) - 시설별 개별 파일로 저장
+  /// 상세 페이지의 엑셀 기반 A4 양식을 HTML로 복제
   static Future<void> exportToTable(List<InspectionModel> inspections) async {
     if (inspections.isEmpty) {
       throw Exception('내보낼 데이터가 없습니다');
@@ -156,115 +157,202 @@ class InspectionExportService {
 
     // 각 시설별로 개별 HTML 파일 생성 및 다운로드
     for (var inspection in inspections) {
-      // HTML 테이블 생성
+      // HTML 생성
       StringBuffer htmlContent = StringBuffer();
       htmlContent.writeln('<!DOCTYPE html>');
       htmlContent.writeln('<html lang="ko">');
       htmlContent.writeln('<head>');
       htmlContent.writeln('  <meta charset="UTF-8">');
       htmlContent.writeln('  <meta name="viewport" content="width=device-width, initial-scale=1.0">');
-      htmlContent.writeln('  <title>${inspection.wellId ?? "점검"} - 점검 상세</title>');
+      htmlContent.writeln('  <title>${inspection.wellId ?? "점검"} - 농업용 공공관정 정기점검</title>');
       htmlContent.writeln('  <style>');
-      htmlContent.writeln('    body { font-family: "Malgun Gothic", sans-serif; margin: 20px; }');
-      htmlContent.writeln('    h1 { color: #2196F3; }');
-      htmlContent.writeln('    table { width: 100%; border-collapse: collapse; margin-top: 20px; }');
-      htmlContent.writeln('    th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }');
-      htmlContent.writeln('    th { background-color: #2196F3; color: white; font-weight: bold; }');
-      htmlContent.writeln('    tr:nth-child(even) { background-color: #f9f9f9; }');
-      htmlContent.writeln('    tr:hover { background-color: #f5f5f5; }');
-      htmlContent.writeln('    .section-header { background-color: #e3f2fd; font-weight: bold; }');
-      htmlContent.writeln('    @media print { button { display: none; } }');
+      htmlContent.writeln('    body { font-family: "Malgun Gothic", "맑은 고딕", sans-serif; margin: 20px; padding: 20px; }');
+      htmlContent.writeln('    .container { max-width: 800px; margin: 0 auto; }');
+      
+      // 제목 스타일
+      htmlContent.writeln('    .title { background-color: #1976D2; color: white; padding: 16px; border-radius: 8px; text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 16px; }');
+      
+      // 테이블 기본 스타일
+      htmlContent.writeln('    table { width: 100%; border-collapse: collapse; margin-bottom: 2px; }');
+      htmlContent.writeln('    td { border: 1px solid #BDBDBD; padding: 12px; font-size: 13px; }');
+      htmlContent.writeln('    .label { background-color: #EEEEEE; font-weight: 600; font-size: 12px; }');
+      htmlContent.writeln('    .value { background-color: white; }');
+      
+      // 기본정보 3컬럼 그리드
+      htmlContent.writeln('    .basic-info { display: table; width: 100%; border: 1px solid #BDBDBD; margin-bottom: 2px; }');
+      htmlContent.writeln('    .basic-cell { display: table-cell; width: 33.33%; text-align: center; border-right: 1px solid #BDBDBD; }');
+      htmlContent.writeln('    .basic-cell:last-child { border-right: none; }');
+      htmlContent.writeln('    .basic-label { background-color: #EEEEEE; padding: 8px; border-bottom: 1px solid #BDBDBD; font-weight: bold; font-size: 13px; }');
+      htmlContent.writeln('    .basic-value { padding: 12px; font-size: 13px; }');
+      
+      // 섹션 헤더
+      htmlContent.writeln('    .section-header { background-color: #BBDEFB; border: 1px solid #BDBDBD; padding: 12px; text-align: center; font-weight: bold; font-size: 14px; color: #1976D2; margin-bottom: 2px; }');
+      
+      // 싱글 로우 (라벨 120px)
+      htmlContent.writeln('    .single-row { display: table; width: 100%; border: 1px solid #BDBDBD; margin-bottom: 2px; }');
+      htmlContent.writeln('    .single-label { display: table-cell; width: 120px; background-color: #EEEEEE; padding: 12px; font-weight: 600; font-size: 12px; border-right: 1px solid #BDBDBD; }');
+      htmlContent.writeln('    .single-value { display: table-cell; padding: 12px; font-size: 13px; }');
+      
+      // 더블 로우 (각 라벨 100px)
+      htmlContent.writeln('    .double-row { display: table; width: 100%; border: 1px solid #BDBDBD; margin-bottom: 2px; }');
+      htmlContent.writeln('    .double-col { display: table-cell; width: 50%; border-right: 1px solid #BDBDBD; }');
+      htmlContent.writeln('    .double-col:last-child { border-right: none; }');
+      htmlContent.writeln('    .double-label { display: inline-block; width: 100px; background-color: #EEEEEE; padding: 12px; font-weight: 600; font-size: 13px; border-right: 1px solid #BDBDBD; vertical-align: top; }');
+      htmlContent.writeln('    .double-value { display: inline-block; padding: 12px; font-size: 13px; vertical-align: top; }');
+      
+      // 트리플 로우 (각 라벨 70px)
+      htmlContent.writeln('    .triple-row { display: table; width: 100%; border: 1px solid #BDBDBD; margin-bottom: 2px; }');
+      htmlContent.writeln('    .triple-col { display: table-cell; width: 33.33%; border-right: 1px solid #BDBDBD; }');
+      htmlContent.writeln('    .triple-col:last-child { border-right: none; }');
+      htmlContent.writeln('    .triple-label { display: inline-block; width: 70px; background-color: #EEEEEE; padding: 12px; font-weight: 600; font-size: 13px; border-right: 1px solid #BDBDBD; vertical-align: top; }');
+      htmlContent.writeln('    .triple-value { display: inline-block; padding: 12px; font-size: 13px; vertical-align: top; }');
+      
+      // 멀티라인 로우 (기타사항)
+      htmlContent.writeln('    .multiline-row { border: 1px solid #BDBDBD; margin-bottom: 2px; }');
+      htmlContent.writeln('    .multiline-label { background-color: #EEEEEE; padding: 12px; font-weight: 600; font-size: 12px; border-bottom: 1px solid #BDBDBD; }');
+      htmlContent.writeln('    .multiline-value { padding: 12px; min-height: 80px; font-size: 13px; }');
+      
+      // 메타 정보
+      htmlContent.writeln('    .meta-info { background-color: #E3F2FD; border: 1px solid #BBDEFB; border-radius: 8px; padding: 16px; margin-top: 24px; }');
+      htmlContent.writeln('    .meta-title { color: #1976D2; font-weight: bold; font-size: 16px; margin-bottom: 12px; }');
+      htmlContent.writeln('    .meta-text { font-size: 12px; color: #757575; margin: 4px 0; }');
+      
+      htmlContent.writeln('    @media print { @page { size: A4; margin: 15mm; } }');
       htmlContent.writeln('  </style>');
       htmlContent.writeln('</head>');
       htmlContent.writeln('<body>');
-      htmlContent.writeln('  <h1>${inspection.wellId ?? "점검 데이터"}</h1>');
-      htmlContent.writeln('  <p>점검일자: ${inspection.inspectDate ?? "-"} | 점검자: ${inspection.inspector ?? "-"}</p>');
-      htmlContent.writeln('  <p>생성일시: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}</p>');
-      htmlContent.writeln('  <div style="margin-bottom: 20px; padding: 15px; background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 5px;">');
-      htmlContent.writeln('    <strong>💡 PDF/이미지로 저장하기:</strong><br>');
-      htmlContent.writeln('    1. <button onclick="window.print()" style="margin: 5px; padding: 8px 16px; background-color: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer;">인쇄 대화상자 열기</button> 버튼을 클릭하거나 Ctrl+P (Mac: Cmd+P) 를 누르세요<br>');
-      htmlContent.writeln('    2. <strong>"대상"을 "PDF로 저장"으로 선택</strong>하면 PDF 파일로 저장됩니다<br>');
-      htmlContent.writeln('    3. PDF를 이미지로 변환하려면 온라인 PDF→JPG/PNG 변환 도구를 사용하세요');
-      htmlContent.writeln('  </div>');
-
-      htmlContent.writeln('  <table>');
-
-      // 메타 정보
-      htmlContent.writeln('    <tr class="section-header"><td colspan="2">메타 정보</td></tr>');
+      htmlContent.writeln('  <div class="container">');
+      
+      // 제목
+      htmlContent.writeln('    <div class="title">농업용 공공관정 정기점검</div>');
+      
+      // 기본정보 (시설명, 성명, 조사일자)
+      htmlContent.writeln('    <div class="basic-info">');
+      htmlContent.writeln('      <div class="basic-cell">');
+      htmlContent.writeln('        <div class="basic-label">시설명</div>');
+      htmlContent.writeln('        <div class="basic-value">${_formatValue(inspection.wellId)}</div>');
+      htmlContent.writeln('      </div>');
+      htmlContent.writeln('      <div class="basic-cell">');
+      htmlContent.writeln('        <div class="basic-label">성명</div>');
+      htmlContent.writeln('        <div class="basic-value">${_formatValue(inspection.inspector)}</div>');
+      htmlContent.writeln('      </div>');
+      htmlContent.writeln('      <div class="basic-cell">');
+      htmlContent.writeln('        <div class="basic-label">조사일자</div>');
+      htmlContent.writeln('        <div class="basic-value">${_formatValue(inspection.inspectDate)}</div>');
+      htmlContent.writeln('      </div>');
+      htmlContent.writeln('    </div>');
+      
+      // 양수장 형태
+      _addSingleRow(htmlContent, '양수장 형태', inspection.yangsuType);
+      
+      // 양수장 출입문
+      _addSingleRow(htmlContent, '양수장 출입문', inspection.chkSphere2);
+      
+      // 양수장 장옥덮개 & 장옥덮개부식
+      _addDoubleRow(htmlContent, '양수장 장옥덮개', inspection.constDate2, '장옥덮개부식', inspection.polprtCovcorSt);
+      
+      // 스마트 안내문
+      _addSingleRow(htmlContent, '스마트 안내문', inspection.inspectorDept2);
+      
+      // 관정덮개 & 이물질배출여부
+      _addDoubleRow(htmlContent, '관정덮개', inspection.boonsu2, '이물질배출여부', inspection.frgSt);
+      
+      // 섹션: 양수장 및 보호공
+      htmlContent.writeln('    <div class="section-header">양수장 및 보호공</div>');
+      
+      // 균열, 누수, 침하
+      _addTripleRow(htmlContent, '균열', inspection.prtCrkSt, '누수', inspection.prtLeakSt, '침하', inspection.prtSsdSt);
+      
+      // 유량계 & 유량계수치
+      _addDoubleRow(htmlContent, '유량계', inspection.flowMeterYn, '유량계수치', inspection.flowMeterNum);
+      
+      // 출수장치 & 수온
+      _addDoubleRow(htmlContent, '출수장치', inspection.chulsufacYn, '수온', inspection.watTemp);
+      
+      // 수위측정관 & EC
+      _addDoubleRow(htmlContent, '수위측정관', inspection.suwicheckpipeYn, 'EC', inspection.junki);
+      
+      // 압력계 & pH
+      _addDoubleRow(htmlContent, '압력계', inspection.wlPondHeight2, 'pH', inspection.ph);
+      
+      // 한전전기 & 자연수위
+      _addDoubleRow(htmlContent, '한전전기', inspection.electricYn, '자연수위', inspection.naturalLevel1);
+      
+      // 한전계량기 & 채수량
+      _addDoubleRow(htmlContent, '한전계량기', inspection.weighMeterId, '채수량', inspection.wlPumpDischarge1);
+      
+      // 누적사용량
+      _addSingleRow(htmlContent, '누적사용량', inspection.weighMeterNum);
+      
+      // 이용상태 & 미활용원인
+      _addDoubleRow(htmlContent, '이용상태', inspection.facStatus, '미활용원인', inspection.notuseReason);
+      
+      // 현재시설 & 미활용공처리방안
+      _addDoubleRow(htmlContent, '현재시설', inspection.useContinue, '미활용공처리방안', inspection.notuse);
+      
+      // 대체시설
+      _addSingleRow(htmlContent, '대체시설', inspection.alterFac);
+      
+      // 섹션: 수중모터
+      htmlContent.writeln('    <div class="section-header">수중모터</div>');
+      
+      // 절연저항
+      _addSingleRow(htmlContent, '절연저항', inspection.pumpIr);
+      
+      // 소음발생여부
+      _addSingleRow(htmlContent, '소음발생여부', inspection.gpumpNoise2);
+      
+      // 작동상태
+      _addSingleRow(htmlContent, '작동상태', inspection.pumpOpSt);
+      
+      // 섹션: 배전함 / 배전반
+      htmlContent.writeln('    <div class="section-header">배전함 / 배전반</div>');
+      
+      // 배전함외형 & 설치
+      _addDoubleRow(htmlContent, '배전함외형', inspection.switchboxLook, '설치', inspection.switchboxInst);
+      
+      // 전기연결
+      _addSingleRow(htmlContent, '전기연결', inspection.pumpGr2);
+      
+      // 접지단자 & 절연단자
+      _addDoubleRow(htmlContent, '접지단자', inspection.switchboxGr, '절연단자', inspection.switchboxIr);
+      
+      // 전압계 & 지시전압
+      _addDoubleRow(htmlContent, '전압계', inspection.switchboxLook2, '지시전압', inspection.switchboxInst2);
+      
+      // 전류계 & 지시전류
+      _addDoubleRow(htmlContent, '전류계', inspection.switchboxGr2, '지시전류', inspection.switchboxIr2);
+      
+      // 배전반동작
+      _addSingleRow(htmlContent, '배전반동작', inspection.switchboxMov);
+      
+      // 섹션: 계기류고장
+      htmlContent.writeln('    <div class="section-header">계기류고장</div>');
+      
+      // 휴즈, floatless, EOCR
+      _addTripleRow(htmlContent, '휴즈', inspection.gpumpGr2, 'floatless', inspection.gpumpIr2, 'EOCR', inspection.pumpFlow);
+      
+      // 마그네틱 & 램프
+      _addDoubleRow(htmlContent, '마그네틱', inspection.wtPipeCor2, '램프', inspection.wlGenPumpCount);
+      
+      // 기타사항
+      _addMultilineRow(htmlContent, '기타사항', inspection.other);
+      
+      // 저장 정보
+      htmlContent.writeln('    <div class="meta-info">');
+      htmlContent.writeln('      <div class="meta-title">저장 정보</div>');
       if (inspection.id != null) {
-        htmlContent.writeln('    <tr><th>ID</th><td>${inspection.id}</td></tr>');
+        htmlContent.writeln('      <div class="meta-text">ID: ${inspection.id}</div>');
       }
       if (inspection.createdAt != null) {
-        htmlContent.writeln('    <tr><th>생성일시</th><td>${DateFormat('yyyy-MM-dd HH:mm').format(inspection.createdAt!)}</td></tr>');
+        htmlContent.writeln('      <div class="meta-text">생성: ${DateFormat('yyyy-MM-dd HH:mm').format(inspection.createdAt!)}</div>');
       }
       if (inspection.updatedAt != null) {
-        htmlContent.writeln('    <tr><th>수정일시</th><td>${DateFormat('yyyy-MM-dd HH:mm').format(inspection.updatedAt!)}</td></tr>');
+        htmlContent.writeln('      <div class="meta-text">수정: ${DateFormat('yyyy-MM-dd HH:mm').format(inspection.updatedAt!)}</div>');
       }
-
-      // 기본정보
-      htmlContent.writeln('    <tr class="section-header"><td colspan="2">① 기본정보</td></tr>');
-      _addRow(htmlContent, '시설명', inspection.wellId);
-      _addRow(htmlContent, '점검자', inspection.inspector);
-      _addRow(htmlContent, '점검일자', inspection.inspectDate);
-      _addRow(htmlContent, '양수장 형태', inspection.yangsuType);
-      _addRow(htmlContent, '출입문', inspection.chkSphere2);
-      _addRow(htmlContent, '장옥덮개', inspection.constDate2);
-      _addRow(htmlContent, '부식도', inspection.polprtCovcorSt);
-      _addRow(htmlContent, '관정덮개', inspection.boonsu2);
-      _addRow(htmlContent, '스마트안내문', inspection.inspectorDept2);
-      _addRow(htmlContent, '이물질', inspection.frgSt);
-      _addRow(htmlContent, '균열', inspection.prtCrkSt);
-      _addRow(htmlContent, '누수', inspection.prtLeakSt);
-      _addRow(htmlContent, '침하', inspection.prtSsdSt);
-
-      // 측정장치
-      htmlContent.writeln('    <tr class="section-header"><td colspan="2">② 측정장치</td></tr>');
-      _addRow(htmlContent, '유량계 유무', inspection.flowMeterYn);
-      _addRow(htmlContent, '출수구 유무', inspection.chulsufacYn);
-      _addRow(htmlContent, '수위확인관 유무', inspection.suwicheckpipeYn);
-      _addRow(htmlContent, '수위', inspection.wlPondHeight2);
-      _addRow(htmlContent, '전기 유무', inspection.electricYn);
-      _addRow(htmlContent, '계량기 ID', inspection.weighMeterId);
-      _addRow(htmlContent, '계량기 번호', inspection.weighMeterNum);
-      _addRow(htmlContent, '토출량', inspection.wlPumpDischarge1);
-      _addRow(htmlContent, '유량계 번호', inspection.flowMeterNum);
-      _addRow(htmlContent, '수온', inspection.watTemp);
-      _addRow(htmlContent, '전기전도도', inspection.junki);
-      _addRow(htmlContent, 'pH', inspection.ph);
-      _addRow(htmlContent, '자연수위', inspection.naturalLevel1);
-      _addRow(htmlContent, '시설상태', inspection.facStatus);
-      _addRow(htmlContent, '미사용사유', inspection.notuseReason);
-      _addRow(htmlContent, '대체시설', inspection.alterFac);
-      _addRow(htmlContent, '미사용', inspection.notuse);
-      _addRow(htmlContent, '사용계속', inspection.useContinue);
-
-      // 전기설비
-      htmlContent.writeln('    <tr class="section-header"><td colspan="2">③ 전기설비</td></tr>');
-      _addRow(htmlContent, '펌프 절연', inspection.pumpIr);
-      _addRow(htmlContent, '배관 부식', inspection.wtPipeCor2);
-      _addRow(htmlContent, '펌프 작동상태', inspection.pumpOpSt);
-      _addRow(htmlContent, '펌프 대수', inspection.wlGenPumpCount);
-      _addRow(htmlContent, '펌프 유량', inspection.pumpFlow);
-      _addRow(htmlContent, '개폐기 외관', inspection.switchboxLook);
-      _addRow(htmlContent, '개폐기 설치', inspection.switchboxInst);
-      _addRow(htmlContent, '펌프 접지', inspection.pumpGr2);
-      _addRow(htmlContent, '개폐기 접지', inspection.switchboxGr);
-      _addRow(htmlContent, '개폐기 절연', inspection.switchboxIr);
-      _addRow(htmlContent, '발전기 소음', inspection.gpumpNoise2);
-      _addRow(htmlContent, '발전기 접지', inspection.gpumpGr2);
-      _addRow(htmlContent, '발전기 절연', inspection.gpumpIr2);
-      _addRow(htmlContent, '제어반 외관', inspection.switchboxLook2);
-      _addRow(htmlContent, '제어반 설치', inspection.switchboxInst2);
-      _addRow(htmlContent, '제어반 접지', inspection.switchboxGr2);
-      _addRow(htmlContent, '제어반 절연', inspection.switchboxIr2);
-      _addRow(htmlContent, '제어반 동작', inspection.switchboxMov);
-
-      // 기타사항
-      htmlContent.writeln('    <tr class="section-header"><td colspan="2">④ 기타사항</td></tr>');
-      _addRow(htmlContent, '기타사항', inspection.other);
-
-      htmlContent.writeln('  </table>');
-
+      htmlContent.writeln('    </div>');
+      
+      htmlContent.writeln('  </div>');
       htmlContent.writeln('</body>');
       htmlContent.writeln('</html>');
 
@@ -286,8 +374,58 @@ class InspectionExportService {
       await Future.delayed(const Duration(milliseconds: 100));
     }
   }
-
-  static void _addRow(StringBuffer htmlContent, String label, String? value) {
-    htmlContent.writeln('    <tr><th>$label</th><td>${value?.isNotEmpty == true ? value : '-'}</td></tr>');
+  
+  /// 값 포맷팅 헬퍼 (null 또는 빈 값을 '-'로 표시)
+  static String _formatValue(String? value) {
+    return value?.isNotEmpty == true ? value! : '-';
   }
+  
+  /// 싱글 로우 생성
+  static void _addSingleRow(StringBuffer html, String label, String? value) {
+    html.writeln('    <div class="single-row">');
+    html.writeln('      <div class="single-label">$label</div>');
+    html.writeln('      <div class="single-value">${_formatValue(value)}</div>');
+    html.writeln('    </div>');
+  }
+  
+  /// 더블 로우 생성
+  static void _addDoubleRow(StringBuffer html, String label1, String? value1, String label2, String? value2) {
+    html.writeln('    <div class="double-row">');
+    html.writeln('      <div class="double-col">');
+    html.writeln('        <span class="double-label">$label1</span>');
+    html.writeln('        <span class="double-value">${_formatValue(value1)}</span>');
+    html.writeln('      </div>');
+    html.writeln('      <div class="double-col">');
+    html.writeln('        <span class="double-label">$label2</span>');
+    html.writeln('        <span class="double-value">${_formatValue(value2)}</span>');
+    html.writeln('      </div>');
+    html.writeln('    </div>');
+  }
+  
+  /// 트리플 로우 생성
+  static void _addTripleRow(StringBuffer html, String label1, String? value1, String label2, String? value2, String label3, String? value3) {
+    html.writeln('    <div class="triple-row">');
+    html.writeln('      <div class="triple-col">');
+    html.writeln('        <span class="triple-label">$label1</span>');
+    html.writeln('        <span class="triple-value">${_formatValue(value1)}</span>');
+    html.writeln('      </div>');
+    html.writeln('      <div class="triple-col">');
+    html.writeln('        <span class="triple-label">$label2</span>');
+    html.writeln('        <span class="triple-value">${_formatValue(value2)}</span>');
+    html.writeln('      </div>');
+    html.writeln('      <div class="triple-col">');
+    html.writeln('        <span class="triple-label">$label3</span>');
+    html.writeln('        <span class="triple-value">${_formatValue(value3)}</span>');
+    html.writeln('      </div>');
+    html.writeln('    </div>');
+  }
+  
+  /// 멀티라인 로우 생성 (기타사항)
+  static void _addMultilineRow(StringBuffer html, String label, String? value) {
+    html.writeln('    <div class="multiline-row">');
+    html.writeln('      <div class="multiline-label">$label</div>');
+    html.writeln('      <div class="multiline-value">${_formatValue(value)}</div>');
+    html.writeln('    </div>');
+  }
+
 }
