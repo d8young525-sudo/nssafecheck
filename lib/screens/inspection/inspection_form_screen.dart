@@ -118,15 +118,20 @@ class _InspectionFormScreenState extends State<InspectionFormScreen>
       // 새 점검 작성 중일 때만 임시저장
       if (widget.inspection != null) return;
       
-      // 입력된 데이터가 있는지 확인
-      final hasData = _viewModel.wellId != null ||
-          _viewModel.inspector != null ||
+      // 입력된 데이터가 있는지 확인 (오늘일자와 점검자만 있는 경우는 제외)
+      // 실제 점검 데이터가 입력되었는지 확인
+      final hasRealData = _viewModel.wellId != null ||
           _viewModel.yangsuType != null ||
           _viewModel.flowMeterYn != null ||
+          _viewModel.suwicheckpipeYn != null ||
+          _viewModel.chulsufacYn != null ||
           _viewModel.pumpIr != null ||
-          _viewModel.other != null;
+          _viewModel.other != null ||
+          _viewModel.watTemp != null ||
+          _viewModel.ph != null ||
+          _viewModel.facStatus != null;
 
-      if (!hasData) return;
+      if (!hasRealData) return;
 
       final prefs = await SharedPreferences.getInstance();
       
@@ -469,12 +474,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen>
             ),
             centerTitle: true,
             actions: [
-              // 저장 버튼 (모든 페이지에서 접근 가능)
-              IconButton(
-                icon: const Icon(Icons.save),
-                tooltip: widget.inspection != null ? '수정 완료' : '저장하기',
-                onPressed: _completeInspection,
-              ),
+              // 우측 상단 아이콘 제거 (플로팅 버튼으로 대체)
             ],
             bottom: TabBar(
               controller: _tabController,
@@ -546,21 +546,20 @@ class _InspectionFormScreenState extends State<InspectionFormScreen>
             ],
           ),
           // 플로팅 액션 버튼 (4페이지에서만 표시)
-          floatingActionButton: _tabController.index == 3
-              ? FloatingActionButton.extended(
-                  onPressed: _completeInspection,
-                  backgroundColor: Colors.green,
-                  icon: const Icon(Icons.save, color: Colors.white),
-                  label: Text(
-                    widget.inspection != null ? '수정 완료' : '저장하기',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                )
-              : null,
+          // 모든 페이지에 플로팅 버튼 표시
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: _completeInspection,
+            backgroundColor: Colors.blue,
+            icon: const Icon(Icons.save, color: Colors.white),
+            label: Text(
+              widget.inspection != null ? '수정 완료' : '점검 완료',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
         ),
       ),
     );

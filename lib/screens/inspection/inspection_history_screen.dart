@@ -29,21 +29,63 @@ class _InspectionHistoryScreenState extends State<InspectionHistoryScreen> {
         ),
         centerTitle: true,
         actions: [
-          // CSV 일괄 내보내기
-          IconButton(
-            icon: const Icon(Icons.download),
-            tooltip: 'CSV 일괄 내보내기',
-            onPressed: () => _exportAllCsv(context),
+          // 저장 버튼 (드롭다운)
+          PopupMenuButton<String>(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.save, size: 18),
+                  SizedBox(width: 4),
+                  Text('저장', style: TextStyle(fontSize: 14)),
+                ],
+              ),
+            ),
+            onSelected: (value) {
+              if (value == 'csv') {
+                _exportAllCsv(context);
+              } else if (value == 'table') {
+                _exportAllTables(context);
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'csv',
+                child: Row(
+                  children: [
+                    Icon(Icons.download, size: 18),
+                    SizedBox(width: 8),
+                    Text('CSV로 출력'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'table',
+                child: Row(
+                  children: [
+                    Icon(Icons.table_chart, size: 18),
+                    SizedBox(width: 8),
+                    Text('표형식으로 저장'),
+                  ],
+                ),
+              ),
+            ],
           ),
-          // 표 형식 일괄 내보내기  
-          IconButton(
-            icon: const Icon(Icons.table_chart),
-            tooltip: '표 형식 일괄 내보내기',
-            onPressed: () => _exportAllTables(context),
-          ),
+          const SizedBox(width: 4),
           // 정렬 버튼
           PopupMenuButton<String>(
-            icon: const Icon(Icons.sort),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.sort, size: 18),
+                  SizedBox(width: 4),
+                  Text('정렬', style: TextStyle(fontSize: 14)),
+                ],
+              ),
+            ),
             onSelected: (value) {
               setState(() => _sortBy = value);
             },
@@ -61,6 +103,13 @@ class _InspectionHistoryScreenState extends State<InspectionHistoryScreen> {
                 child: Text('시설명순'),
               ),
             ],
+          ),
+          const SizedBox(width: 4),
+          // 전체삭제 버튼
+          IconButton(
+            icon: const Icon(Icons.delete_forever),
+            tooltip: '전체삭제',
+            onPressed: () => _deleteAllInspections(context),
           ),
         ],
       ),
@@ -276,6 +325,110 @@ class _InspectionHistoryScreenState extends State<InspectionHistoryScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('표 형식 내보내기 실패: $e')),
+        );
+      }
+    }
+  }
+
+  /// 전체 점검 데이터 삭제
+  Future<void> _deleteAllInspections(BuildContext context) async {
+    final box = Hive.box<InspectionModel>('inspections');
+    
+    if (box.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('삭제할 데이터가 없습니다')),
+        );
+      }
+      return;
+    }
+
+    // 텍스트 입력 다이얼로그
+    final TextEditingController textController = TextEditingController();
+    bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('전체 데이터 삭제'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '현재 ${box.length}건의 점검 데이터가 저장되어 있습니다.',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '모든 데이터를 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.',
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              '확인하려면 아래에 "삭제" 를 입력하세요:',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: textController,
+              decoration: const InputDecoration(
+                hintText: '삭제',
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (textController.text == '삭제') {
+                Navigator.pop(context, true);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('"삭제" 를 정확히 입력해주세요'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await box.clear();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('모든 점검 데이터가 삭제되었습니다'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('삭제 실패: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }

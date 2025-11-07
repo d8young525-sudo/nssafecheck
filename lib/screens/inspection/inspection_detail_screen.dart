@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import '../../models/inspection_model.dart';
 import 'inspection_form_screen.dart';
 
-/// 점검 이력 상세 조회 화면 (읽기 전용)
+/// 점검 이력 상세 조회 화면 (엑셀 양식 기반 A4 한장 형식)
 class InspectionDetailScreen extends StatelessWidget {
   final InspectionModel inspection;
 
@@ -104,86 +104,205 @@ class InspectionDetailScreen extends StatelessWidget {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 메타 정보
-            _buildMetaInfo(dateFormat),
-
-            const SizedBox(height: 24),
-
-            // Page 1: 기본정보
-            _buildSection('① 기본정보', [
-              _buildField('시설명', inspection.wellId),
-              _buildField('점검자', inspection.inspector),
-              _buildField('점검일자', inspection.inspectDate),
-              _buildField('양수장 형태', inspection.yangsuType),
-              _buildField('출입문', inspection.chkSphere2),
-              _buildField('장옥덮개', inspection.constDate2),
-              _buildField('부식도', inspection.polprtCovcorSt),
-              _buildField('관정덮개', inspection.boonsu2),
-              _buildField('스마트안내문', inspection.inspectorDept2),
-              _buildField('이물질', inspection.frgSt),
-              _buildField('균열', inspection.prtCrkSt),
-              _buildField('누수', inspection.prtLeakSt),
-              _buildField('침하', inspection.prtSsdSt),
-            ]),
-
-            const SizedBox(height: 16),
-
-            // Page 2: 측정장치
-            _buildSection('② 측정장치', [
-              _buildField('유량계 유무', inspection.flowMeterYn),
-              _buildField('출수구 유무', inspection.chulsufacYn),
-              _buildField('수위확인관 유무', inspection.suwicheckpipeYn),
-              _buildField('수위', inspection.wlPondHeight2),
-              _buildField('전기 유무', inspection.electricYn),
-              _buildField('계량기 ID', inspection.weighMeterId),
-              _buildField('계량기 번호', inspection.weighMeterNum),
-              _buildField('토출량', inspection.wlPumpDischarge1),
-              _buildField('유량계 번호', inspection.flowMeterNum),
-              _buildField('수온', inspection.watTemp),
-              _buildField('전기전도도', inspection.junki),
-              _buildField('pH', inspection.ph),
-              _buildField('자연수위', inspection.naturalLevel1),
-              _buildField('시설상태', inspection.facStatus),
-              _buildField('미사용사유', inspection.notuseReason),
-              _buildField('대체시설', inspection.alterFac),
-              _buildField('미사용', inspection.notuse),
-              _buildField('사용계속', inspection.useContinue),
-            ]),
-
-            const SizedBox(height: 16),
-
-            // Page 3: 전기설비
-            _buildSection('③ 전기설비', [
-              _buildField('펌프 절연', inspection.pumpIr),
-              _buildField('배관 부식', inspection.wtPipeCor2),
-              _buildField('펌프 작동상태', inspection.pumpOpSt),
-              _buildField('펌프 대수', inspection.wlGenPumpCount),
-              _buildField('펌프 유량', inspection.pumpFlow),
-              _buildField('개폐기 외관', inspection.switchboxLook),
-              _buildField('개폐기 설치', inspection.switchboxInst),
-              _buildField('펌프 접지', inspection.pumpGr2),
-              _buildField('개폐기 접지', inspection.switchboxGr),
-              _buildField('개폐기 절연', inspection.switchboxIr),
-              _buildField('발전기 소음', inspection.gpumpNoise2),
-              _buildField('발전기 접지', inspection.gpumpGr2),
-              _buildField('발전기 절연', inspection.gpumpIr2),
-              _buildField('제어반 외관', inspection.switchboxLook2),
-              _buildField('제어반 설치', inspection.switchboxInst2),
-              _buildField('제어반 접지', inspection.switchboxGr2),
-              _buildField('제어반 절연', inspection.switchboxIr2),
-              _buildField('제어반 동작', inspection.switchboxMov),
-            ]),
-
-            const SizedBox(height: 16),
-
-            // Page 4: 기타사항
-            _buildSection('④ 기타사항', [
-              _buildField('기타사항', inspection.other, maxLines: 5),
-            ]),
-          ],
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // 제목
+              _buildTitle(),
+              const SizedBox(height: 16),
+              
+              // 기본정보 (시설명, 성명, 조사일자)
+              _buildBasicInfo(),
+              const SizedBox(height: 2),
+              
+              // 양수장 형태
+              _buildSingleRow('양수장 형태', inspection.yangsuType),
+              const SizedBox(height: 2),
+              
+              // 양수장 출입문
+              _buildSingleRow('양수장 출입문', inspection.chkSphere2),
+              const SizedBox(height: 2),
+              
+              // 양수장 장옥덮개 & 장옥덮개부식
+              _buildDoubleRow(
+                '양수장 장옥덮개', inspection.constDate2,
+                '장옥덮개부식', inspection.polprtCovcorSt,
+              ),
+              const SizedBox(height: 2),
+              
+              // 스마트 안내문
+              _buildSingleRow('스마트 안내문', inspection.inspectorDept2),
+              const SizedBox(height: 2),
+              
+              // 관정덮개 & 이물질배출여부
+              _buildDoubleRow(
+                '관정덮개', inspection.boonsu2,
+                '이물질배출여부', inspection.frgSt,
+              ),
+              const SizedBox(height: 2),
+              
+              // 섹션 헤더: 양수장 및 보호공
+              _buildSectionHeader('양수장 및 보호공'),
+              const SizedBox(height: 2),
+              
+              // 균열, 누수, 침하
+              _buildTripleRow(
+                '균열', inspection.prtCrkSt,
+                '누수', inspection.prtLeakSt,
+                '침하', inspection.prtSsdSt,
+              ),
+              const SizedBox(height: 2),
+              
+              // 유량계 & 유량계수치
+              _buildDoubleRow(
+                '유량계', inspection.flowMeterYn,
+                '유량계수치', inspection.flowMeterNum,
+              ),
+              const SizedBox(height: 2),
+              
+              // 출수장치 & 수온
+              _buildDoubleRow(
+                '출수장치', inspection.chulsufacYn,
+                '수온', inspection.watTemp,
+              ),
+              const SizedBox(height: 2),
+              
+              // 수위측정관 & EC
+              _buildDoubleRow(
+                '수위측정관', inspection.suwicheckpipeYn,
+                'EC', inspection.junki,
+              ),
+              const SizedBox(height: 2),
+              
+              // 압력계 & pH
+              _buildDoubleRow(
+                '압력계', inspection.wlPondHeight2,
+                'pH', inspection.ph,
+              ),
+              const SizedBox(height: 2),
+              
+              // 한전전기 & 자연수위
+              _buildDoubleRow(
+                '한전전기', inspection.electricYn,
+                '자연수위', inspection.naturalLevel1,
+              ),
+              const SizedBox(height: 2),
+              
+              // 한전계량기 & 채수량
+              _buildDoubleRow(
+                '한전계량기', inspection.weighMeterId,
+                '채수량', inspection.wlPumpDischarge1,
+              ),
+              const SizedBox(height: 2),
+              
+              // 누적사용량
+              _buildSingleRow('누적사용량', inspection.weighMeterNum),
+              const SizedBox(height: 2),
+              
+              // 이용상태 & 미활용원인
+              _buildDoubleRow(
+                '이용상태', inspection.facStatus,
+                '미활용원인', inspection.notuseReason,
+              ),
+              const SizedBox(height: 2),
+              
+              // 현재시설 & 미활용공처리방안
+              _buildDoubleRow(
+                '현재시설', inspection.useContinue,
+                '미활용공처리방안', inspection.notuse,
+              ),
+              const SizedBox(height: 2),
+              
+              // 대체시설
+              _buildSingleRow('대체시설', inspection.alterFac),
+              const SizedBox(height: 2),
+              
+              // 섹션 헤더: 수중모터
+              _buildSectionHeader('수중모터'),
+              const SizedBox(height: 2),
+              
+              // 절연저항
+              _buildSingleRow('절연저항', inspection.pumpIr),
+              const SizedBox(height: 2),
+              
+              // 소음발생여부
+              _buildSingleRow('소음발생여부', inspection.gpumpNoise2),
+              const SizedBox(height: 2),
+              
+              // 작동상태
+              _buildSingleRow('작동상태', inspection.pumpOpSt),
+              const SizedBox(height: 2),
+              
+              // 섹션 헤더: 배전함 / 배전반
+              _buildSectionHeader('배전함 / 배전반'),
+              const SizedBox(height: 2),
+              
+              // 배전함외형 & 설치
+              _buildDoubleRow(
+                '배전함외형', inspection.switchboxLook,
+                '설치', inspection.switchboxInst,
+              ),
+              const SizedBox(height: 2),
+              
+              // 전기연결
+              _buildSingleRow('전기연결', inspection.pumpGr2),
+              const SizedBox(height: 2),
+              
+              // 접지단자 & 절연단자
+              _buildDoubleRow(
+                '접지단자', inspection.switchboxGr,
+                '절연단자', inspection.switchboxIr,
+              ),
+              const SizedBox(height: 2),
+              
+              // 전압계 & 지시전압
+              _buildDoubleRow(
+                '전압계', inspection.switchboxLook2,
+                '지시전압', inspection.switchboxInst2,
+              ),
+              const SizedBox(height: 2),
+              
+              // 전류계 & 지시전류
+              _buildDoubleRow(
+                '전류계', inspection.switchboxGr2,
+                '지시전류', inspection.switchboxIr2,
+              ),
+              const SizedBox(height: 2),
+              
+              // 배전반동작
+              _buildSingleRow('배전반동작', inspection.switchboxMov),
+              const SizedBox(height: 2),
+              
+              // 섹션 헤더: 계기류고장
+              _buildSectionHeader('계기류고장'),
+              const SizedBox(height: 2),
+              
+              // 휴즈, floatless, EOCR
+              _buildTripleRow(
+                '휴즈', inspection.gpumpGr2,
+                'floatless', inspection.gpumpIr2,
+                'EOCR', inspection.pumpFlow,
+              ),
+              const SizedBox(height: 2),
+              
+              // 마그네틱 & 램프
+              _buildDoubleRow(
+                '마그네틱', inspection.wtPipeCor2,
+                '램프', inspection.wlGenPumpCount,
+              ),
+              const SizedBox(height: 2),
+              
+              // 기타사항
+              _buildMultilineRow('기타사항', inspection.other),
+              
+              const SizedBox(height: 24),
+              
+              // 저장 정보
+              _buildMetaInfo(dateFormat),
+            ],
+          ),
         ),
       ),
       // 하단 수정/삭제 버튼
@@ -280,6 +399,365 @@ class InspectionDetailScreen extends StatelessWidget {
     );
   }
 
+  /// 제목
+  Widget _buildTitle() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.blue[700],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: const Text(
+        '농업용 공공관정 정기점검',
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  /// 기본정보 (시설명, 성명, 조사일자)
+  Widget _buildBasicInfo() {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey[400]!),
+      ),
+      child: Row(
+        children: [
+          // 시설명
+          _buildInfoCell('시설명', inspection.wellId, flex: 2),
+          Container(width: 1, color: Colors.grey[400]),
+          // 성명
+          _buildInfoCell('성명', inspection.inspector, flex: 2),
+          Container(width: 1, color: Colors.grey[400]),
+          // 조사일자
+          _buildInfoCell('조사일자', inspection.inspectDate, flex: 2),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoCell(String label, String? value, {int flex = 1}) {
+    return Expanded(
+      flex: flex,
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              border: Border(bottom: BorderSide(color: Colors.grey[400]!)),
+            ),
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            child: Text(
+              value?.isNotEmpty == true ? value! : '-',
+              style: const TextStyle(fontSize: 13),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 한 줄 (라벨 + 값)
+  Widget _buildSingleRow(String label, String? value) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey[400]!),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 120,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              border: Border(right: BorderSide(color: Colors.grey[400]!)),
+            ),
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              child: Text(
+                value?.isNotEmpty == true ? value! : '-',
+                style: const TextStyle(fontSize: 13),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 두 컬럼 (라벨1 + 값1 | 라벨2 + 값2)
+  Widget _buildDoubleRow(String label1, String? value1, String label2, String? value2) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey[400]!),
+      ),
+      child: Row(
+        children: [
+          // 첫 번째 컬럼
+          Expanded(
+            child: Row(
+              children: [
+                Container(
+                  width: 100,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    border: Border(right: BorderSide(color: Colors.grey[400]!)),
+                  ),
+                  child: Text(
+                    label1,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    child: Text(
+                      value1?.isNotEmpty == true ? value1! : '-',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(width: 1, color: Colors.grey[400]),
+          // 두 번째 컬럼
+          Expanded(
+            child: Row(
+              children: [
+                Container(
+                  width: 100,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    border: Border(right: BorderSide(color: Colors.grey[400]!)),
+                  ),
+                  child: Text(
+                    label2,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    child: Text(
+                      value2?.isNotEmpty == true ? value2! : '-',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 세 컬럼 (라벨1 + 값1 | 라벨2 + 값2 | 라벨3 + 값3)
+  Widget _buildTripleRow(
+    String label1, String? value1,
+    String label2, String? value2,
+    String label3, String? value3,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey[400]!),
+      ),
+      child: Row(
+        children: [
+          // 첫 번째 컬럼
+          Expanded(
+            child: Row(
+              children: [
+                Container(
+                  width: 70,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    border: Border(right: BorderSide(color: Colors.grey[400]!)),
+                  ),
+                  child: Text(
+                    label1,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    child: Text(
+                      value1?.isNotEmpty == true ? value1! : '-',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(width: 1, color: Colors.grey[400]),
+          // 두 번째 컬럼
+          Expanded(
+            child: Row(
+              children: [
+                Container(
+                  width: 70,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    border: Border(right: BorderSide(color: Colors.grey[400]!)),
+                  ),
+                  child: Text(
+                    label2,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    child: Text(
+                      value2?.isNotEmpty == true ? value2! : '-',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(width: 1, color: Colors.grey[400]),
+          // 세 번째 컬럼
+          Expanded(
+            child: Row(
+              children: [
+                Container(
+                  width: 70,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    border: Border(right: BorderSide(color: Colors.grey[400]!)),
+                  ),
+                  child: Text(
+                    label3,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    child: Text(
+                      value3?.isNotEmpty == true ? value3! : '-',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 섹션 헤더
+  Widget _buildSectionHeader(String title) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.blue[100],
+        border: Border.all(color: Colors.grey[400]!),
+      ),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: Colors.blue,
+        ),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  /// 여러 줄 입력 (기타사항)
+  Widget _buildMultilineRow(String label, String? value) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey[400]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              border: Border(bottom: BorderSide(color: Colors.grey[400]!)),
+            ),
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            constraints: const BoxConstraints(minHeight: 80),
+            child: Text(
+              value?.isNotEmpty == true ? value! : '-',
+              style: const TextStyle(fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMetaInfo(DateFormat dateFormat) {
     return Card(
       elevation: 2,
@@ -289,11 +767,11 @@ class InspectionDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const Row(
               children: [
-                const Icon(Icons.info_outline, color: Colors.blue),
-                const SizedBox(width: 8),
-                const Text(
+                Icon(Icons.info_outline, color: Colors.blue),
+                SizedBox(width: 8),
+                Text(
                   '저장 정보',
                   style: TextStyle(
                     fontSize: 16,
@@ -318,80 +796,4 @@ class InspectionDetailScreen extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildSection(String title, List<Widget> children) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.blue,
-              ),
-            ),
-            const Divider(height: 24),
-            ...children,
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildField(String label, String? value, {int maxLines = 1}) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 1),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[300]!, width: 1),
-        color: Colors.white,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 필드명 (왼쪽 - 배경색)
-          Container(
-            width: 140,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              border: Border(
-                right: BorderSide(color: Colors.grey[300]!, width: 1),
-              ),
-            ),
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-            ),
-          ),
-          // 값 (오른쪽)
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              child: Text(
-                value?.isNotEmpty == true ? value! : '-',
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: Colors.black87,
-                ),
-                maxLines: maxLines,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
 }
