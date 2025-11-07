@@ -49,6 +49,9 @@ dependencies:
 
   # CSV 내보내기
   csv: 6.0.0
+  
+  # ZIP 파일 생성
+  archive: 3.6.1
 
   # Utilities
   intl: 0.19.0

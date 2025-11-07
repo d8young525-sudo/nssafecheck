@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:html' as html;
 import 'package:csv/csv.dart';
 import 'package:intl/intl.dart';
+import 'package:archive/archive.dart';
 import '../../models/inspection_model.dart';
 
 /// 점검 데이터 내보내기 서비스
@@ -148,14 +149,17 @@ class InspectionExportService {
     html.Url.revokeObjectUrl(url);
   }
 
-  /// 표 형식 내보내기 (HTML 테이블) - 시설별 개별 파일로 저장
+  /// 표 형식 내보내기 (HTML 테이블) - ZIP 파일로 시설별 개별 파일 저장
   /// 상세 페이지의 엑셀 기반 A4 양식을 HTML로 복제
   static Future<void> exportToTable(List<InspectionModel> inspections) async {
     if (inspections.isEmpty) {
       throw Exception('내보낼 데이터가 없습니다');
     }
 
-    // 각 시설별로 개별 HTML 파일 생성 및 다운로드
+    // ZIP 아카이브 생성
+    final archive = Archive();
+
+    // 각 시설별로 개별 HTML 파일 생성하여 ZIP에 추가
     for (var inspection in inspections) {
       // HTML 생성
       StringBuffer htmlContent = StringBuffer();
@@ -362,22 +366,37 @@ class InspectionExportService {
       htmlContent.writeln('</html>');
 
       // 시설명을 파일명으로 사용 (특수문자 제거)
-      String fileName = inspection.wellId ?? 'inspection';
+      String fileName = inspection.wellId ?? 'inspection_${inspections.indexOf(inspection) + 1}';
       // 파일명에 사용할 수 없는 문자 제거
       fileName = fileName.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
       
-      // HTML 파일 다운로드
-      final bytes = utf8.encode(htmlContent.toString());
-      final blob = html.Blob([bytes]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', '$fileName.html')
-        ..click();
-      html.Url.revokeObjectUrl(url);
+      // HTML 문자열을 바이트로 변환하여 ZIP에 추가할 준비
+      final htmlBytes = utf8.encode(htmlContent.toString());
       
-      // 연속 다운로드를 위한 짧은 대기
-      await Future.delayed(const Duration(milliseconds: 100));
+      // Archive에 파일 추가
+      final archiveFile = ArchiveFile(
+        '$fileName.html',
+        htmlBytes.length,
+        htmlBytes,
+      );
+      archive.addFile(archiveFile);
     }
+    
+    // ZIP 파일 생성
+    final zipEncoder = ZipEncoder();
+    final zipBytes = zipEncoder.encode(archive);
+    
+    if (zipBytes == null) {
+      throw Exception('ZIP 파일 생성 실패');
+    }
+    
+    // ZIP 파일 다운로드
+    final blob = html.Blob([zipBytes]);
+    final url = html.Url.createObjectUrlFromBlob(blob);
+    final anchor = html.AnchorElement(href: url)
+      ..setAttribute('download', 'inspections_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.zip')
+      ..click();
+    html.Url.revokeObjectUrl(url);
   }
   
   /// 값 포맷팅 헬퍼 (null 또는 빈 값을 '-'로 표시)
