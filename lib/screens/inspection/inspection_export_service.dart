@@ -295,11 +295,6 @@ class InspectionExportService {
       htmlContent.writeln('    .multiline-label { background-color: #EEEEEE; padding: 4px 6px; font-weight: 600; font-size: 9px; border-bottom: 1px solid #BDBDBD; }');
       htmlContent.writeln('    .multiline-value { padding: 4px 6px; min-height: 40px; font-size: 10px; }');
       
-      // 메타 정보 (압축)
-      htmlContent.writeln('    .meta-info { background-color: #E3F2FD; border: 1px solid #BBDEFB; border-radius: 4px; padding: 8px; margin-top: 8px; }');
-      htmlContent.writeln('    .meta-title { color: #1976D2; font-weight: bold; font-size: 11px; margin-bottom: 4px; }');
-      htmlContent.writeln('    .meta-text { font-size: 9px; color: #757575; margin: 2px 0; }');
-      
       // A4 인쇄 설정
       htmlContent.writeln('    @media print { ');
       htmlContent.writeln('      @page { size: A4 portrait; margin: 10mm; } ');
@@ -425,20 +420,6 @@ class InspectionExportService {
       
       // 기타사항
       _addMultilineRow(htmlContent, '기타사항', inspection.other);
-      
-      // 저장 정보
-      htmlContent.writeln('    <div class="meta-info">');
-      htmlContent.writeln('      <div class="meta-title">저장 정보</div>');
-      if (inspection.id != null) {
-        htmlContent.writeln('      <div class="meta-text">ID: ${inspection.id}</div>');
-      }
-      if (inspection.createdAt != null) {
-        htmlContent.writeln('      <div class="meta-text">생성: ${DateFormat('yyyy-MM-dd HH:mm').format(inspection.createdAt!)}</div>');
-      }
-      if (inspection.updatedAt != null) {
-        htmlContent.writeln('      <div class="meta-text">수정: ${DateFormat('yyyy-MM-dd HH:mm').format(inspection.updatedAt!)}</div>');
-      }
-      htmlContent.writeln('    </div>');
       
       htmlContent.writeln('  </div>');
       htmlContent.writeln('</body>');
