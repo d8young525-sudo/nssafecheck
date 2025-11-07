@@ -166,58 +166,63 @@ class InspectionExportService {
       htmlContent.writeln('  <meta name="viewport" content="width=device-width, initial-scale=1.0">');
       htmlContent.writeln('  <title>${inspection.wellId ?? "점검"} - 농업용 공공관정 정기점검</title>');
       htmlContent.writeln('  <style>');
-      htmlContent.writeln('    body { font-family: "Malgun Gothic", "맑은 고딕", sans-serif; margin: 20px; padding: 20px; }');
-      htmlContent.writeln('    .container { max-width: 800px; margin: 0 auto; }');
+      htmlContent.writeln('    body { font-family: "Malgun Gothic", "맑은 고딕", sans-serif; margin: 0; padding: 0; }');
+      htmlContent.writeln('    .container { max-width: 210mm; margin: 0 auto; padding: 10mm; box-sizing: border-box; }');
       
-      // 제목 스타일
-      htmlContent.writeln('    .title { background-color: #1976D2; color: white; padding: 16px; border-radius: 8px; text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 16px; }');
+      // 제목 스타일 (A4 최적화 - 작게)
+      htmlContent.writeln('    .title { background-color: #1976D2; color: white; padding: 8px; border-radius: 4px; text-align: center; font-size: 16px; font-weight: bold; margin-bottom: 6px; }');
       
       // 테이블 기본 스타일
-      htmlContent.writeln('    table { width: 100%; border-collapse: collapse; margin-bottom: 2px; }');
-      htmlContent.writeln('    td { border: 1px solid #BDBDBD; padding: 12px; font-size: 13px; }');
-      htmlContent.writeln('    .label { background-color: #EEEEEE; font-weight: 600; font-size: 12px; }');
+      htmlContent.writeln('    table { width: 100%; border-collapse: collapse; margin-bottom: 1px; }');
+      htmlContent.writeln('    td { border: 1px solid #BDBDBD; padding: 4px 6px; font-size: 10px; }');
+      htmlContent.writeln('    .label { background-color: #EEEEEE; font-weight: 600; font-size: 9px; }');
       htmlContent.writeln('    .value { background-color: white; }');
       
-      // 기본정보 3컬럼 그리드
-      htmlContent.writeln('    .basic-info { display: table; width: 100%; border: 1px solid #BDBDBD; margin-bottom: 2px; }');
+      // 기본정보 3컬럼 그리드 (압축)
+      htmlContent.writeln('    .basic-info { display: table; width: 100%; border: 1px solid #BDBDBD; margin-bottom: 1px; }');
       htmlContent.writeln('    .basic-cell { display: table-cell; width: 33.33%; text-align: center; border-right: 1px solid #BDBDBD; }');
       htmlContent.writeln('    .basic-cell:last-child { border-right: none; }');
-      htmlContent.writeln('    .basic-label { background-color: #EEEEEE; padding: 8px; border-bottom: 1px solid #BDBDBD; font-weight: bold; font-size: 13px; }');
-      htmlContent.writeln('    .basic-value { padding: 12px; font-size: 13px; }');
+      htmlContent.writeln('    .basic-label { background-color: #EEEEEE; padding: 4px; border-bottom: 1px solid #BDBDBD; font-weight: bold; font-size: 10px; }');
+      htmlContent.writeln('    .basic-value { padding: 4px; font-size: 10px; }');
       
-      // 섹션 헤더
-      htmlContent.writeln('    .section-header { background-color: #BBDEFB; border: 1px solid #BDBDBD; padding: 12px; text-align: center; font-weight: bold; font-size: 14px; color: #1976D2; margin-bottom: 2px; }');
+      // 섹션 헤더 (압축)
+      htmlContent.writeln('    .section-header { background-color: #BBDEFB; border: 1px solid #BDBDBD; padding: 4px; text-align: center; font-weight: bold; font-size: 11px; color: #1976D2; margin-bottom: 1px; }');
       
-      // 싱글 로우 (라벨 120px)
-      htmlContent.writeln('    .single-row { display: table; width: 100%; border: 1px solid #BDBDBD; margin-bottom: 2px; }');
-      htmlContent.writeln('    .single-label { display: table-cell; width: 120px; background-color: #EEEEEE; padding: 12px; font-weight: 600; font-size: 12px; border-right: 1px solid #BDBDBD; }');
-      htmlContent.writeln('    .single-value { display: table-cell; padding: 12px; font-size: 13px; }');
+      // 싱글 로우 (라벨 80px로 축소)
+      htmlContent.writeln('    .single-row { display: table; width: 100%; border: 1px solid #BDBDBD; margin-bottom: 1px; }');
+      htmlContent.writeln('    .single-label { display: table-cell; width: 80px; background-color: #EEEEEE; padding: 4px 6px; font-weight: 600; font-size: 9px; border-right: 1px solid #BDBDBD; }');
+      htmlContent.writeln('    .single-value { display: table-cell; padding: 4px 6px; font-size: 10px; }');
       
-      // 더블 로우 (각 라벨 100px)
-      htmlContent.writeln('    .double-row { display: table; width: 100%; border: 1px solid #BDBDBD; margin-bottom: 2px; }');
+      // 더블 로우 (각 라벨 70px로 축소)
+      htmlContent.writeln('    .double-row { display: table; width: 100%; border: 1px solid #BDBDBD; margin-bottom: 1px; }');
       htmlContent.writeln('    .double-col { display: table-cell; width: 50%; border-right: 1px solid #BDBDBD; }');
       htmlContent.writeln('    .double-col:last-child { border-right: none; }');
-      htmlContent.writeln('    .double-label { display: inline-block; width: 100px; background-color: #EEEEEE; padding: 12px; font-weight: 600; font-size: 13px; border-right: 1px solid #BDBDBD; vertical-align: top; }');
-      htmlContent.writeln('    .double-value { display: inline-block; padding: 12px; font-size: 13px; vertical-align: top; }');
+      htmlContent.writeln('    .double-label { display: inline-block; width: 70px; background-color: #EEEEEE; padding: 4px 6px; font-weight: 600; font-size: 9px; border-right: 1px solid #BDBDBD; vertical-align: top; }');
+      htmlContent.writeln('    .double-value { display: inline-block; padding: 4px 6px; font-size: 10px; vertical-align: top; }');
       
-      // 트리플 로우 (각 라벨 70px)
-      htmlContent.writeln('    .triple-row { display: table; width: 100%; border: 1px solid #BDBDBD; margin-bottom: 2px; }');
+      // 트리플 로우 (각 라벨 50px로 축소)
+      htmlContent.writeln('    .triple-row { display: table; width: 100%; border: 1px solid #BDBDBD; margin-bottom: 1px; }');
       htmlContent.writeln('    .triple-col { display: table-cell; width: 33.33%; border-right: 1px solid #BDBDBD; }');
       htmlContent.writeln('    .triple-col:last-child { border-right: none; }');
-      htmlContent.writeln('    .triple-label { display: inline-block; width: 70px; background-color: #EEEEEE; padding: 12px; font-weight: 600; font-size: 13px; border-right: 1px solid #BDBDBD; vertical-align: top; }');
-      htmlContent.writeln('    .triple-value { display: inline-block; padding: 12px; font-size: 13px; vertical-align: top; }');
+      htmlContent.writeln('    .triple-label { display: inline-block; width: 50px; background-color: #EEEEEE; padding: 4px 6px; font-weight: 600; font-size: 9px; border-right: 1px solid #BDBDBD; vertical-align: top; }');
+      htmlContent.writeln('    .triple-value { display: inline-block; padding: 4px 6px; font-size: 10px; vertical-align: top; }');
       
-      // 멀티라인 로우 (기타사항)
-      htmlContent.writeln('    .multiline-row { border: 1px solid #BDBDBD; margin-bottom: 2px; }');
-      htmlContent.writeln('    .multiline-label { background-color: #EEEEEE; padding: 12px; font-weight: 600; font-size: 12px; border-bottom: 1px solid #BDBDBD; }');
-      htmlContent.writeln('    .multiline-value { padding: 12px; min-height: 80px; font-size: 13px; }');
+      // 멀티라인 로우 (기타사항 - 압축)
+      htmlContent.writeln('    .multiline-row { border: 1px solid #BDBDBD; margin-bottom: 1px; }');
+      htmlContent.writeln('    .multiline-label { background-color: #EEEEEE; padding: 4px 6px; font-weight: 600; font-size: 9px; border-bottom: 1px solid #BDBDBD; }');
+      htmlContent.writeln('    .multiline-value { padding: 4px 6px; min-height: 40px; font-size: 10px; }');
       
-      // 메타 정보
-      htmlContent.writeln('    .meta-info { background-color: #E3F2FD; border: 1px solid #BBDEFB; border-radius: 8px; padding: 16px; margin-top: 24px; }');
-      htmlContent.writeln('    .meta-title { color: #1976D2; font-weight: bold; font-size: 16px; margin-bottom: 12px; }');
-      htmlContent.writeln('    .meta-text { font-size: 12px; color: #757575; margin: 4px 0; }');
+      // 메타 정보 (압축)
+      htmlContent.writeln('    .meta-info { background-color: #E3F2FD; border: 1px solid #BBDEFB; border-radius: 4px; padding: 8px; margin-top: 8px; }');
+      htmlContent.writeln('    .meta-title { color: #1976D2; font-weight: bold; font-size: 11px; margin-bottom: 4px; }');
+      htmlContent.writeln('    .meta-text { font-size: 9px; color: #757575; margin: 2px 0; }');
       
-      htmlContent.writeln('    @media print { @page { size: A4; margin: 15mm; } }');
+      // A4 인쇄 설정
+      htmlContent.writeln('    @media print { ');
+      htmlContent.writeln('      @page { size: A4 portrait; margin: 10mm; } ');
+      htmlContent.writeln('      body { margin: 0; padding: 0; }');
+      htmlContent.writeln('      .container { padding: 0; max-width: 100%; }');
+      htmlContent.writeln('    }');
       htmlContent.writeln('  </style>');
       htmlContent.writeln('</head>');
       htmlContent.writeln('<body>');
