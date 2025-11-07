@@ -8,7 +8,75 @@ import '../../models/inspection_model.dart';
 
 /// 점검 데이터 내보내기 서비스
 class InspectionExportService {
-  /// CSV 내보내기 (외주출력 엑셀 템플릿 기반 헤더)
+  
+  /// 측정장치 평가등급 계산 (유량계, 출수장치, 수위측정관)
+  static String _calculateDeviceGrade(InspectionModel inspection) {
+    final items = [
+      inspection.flowMeterYn ?? '',
+      inspection.chulsufacYn ?? '',
+      inspection.suwicheckpipeYn ?? '',
+    ];
+    
+    int uncheckCount = 0;
+    int issueCount = 0;
+    
+    for (var item in items) {
+      final value = item.trim().toLowerCase();
+      
+      if (value == '확인불가') {
+        uncheckCount++;
+      } else if (value.contains('파손') || 
+                 value.contains('고장') || 
+                 value.contains('막힘') ||
+                 value.contains('무') ||
+                 value.contains('확인불가')) {
+        issueCount++;
+      }
+    }
+    
+    if (uncheckCount == 3) return 'E';
+    if (issueCount == 3) return 'D';
+    if (issueCount >= 2) return 'C';
+    return 'B';
+  }
+  
+  /// 양수장 판단등급 계산 (균열, 누수 기반)
+  static String _calculateYangsuGrade(InspectionModel inspection) {
+    final crackText = (inspection.prtCrkSt ?? '').trim().toLowerCase();
+    final leakText = (inspection.prtLeakSt ?? '').trim().toLowerCase();
+    
+    if (crackText.contains('천장') ||
+        crackText.contains('파손') ||
+        crackText.contains('노후') ||
+        leakText.contains('침수')) {
+      return 'C';
+    }
+    
+    return 'B';
+  }
+  
+  /// 오염방지 판단등급 계산 (그라우팅, 상부보호공, 케이싱, 관정덮개)
+  static String _calculatePollutionGrade(InspectionModel inspection) {
+    // VBA에서는 그라우팅유무, 상부보호공유무, 오염방지케이싱유무가 별도 필드
+    // 현재 모델에는 해당 필드가 없으므로, 관정덮개만 사용
+    // TODO: 필요시 InspectionModel에 필드 추가 필요
+    
+    final coverText = (inspection.boonsu2 ?? '').trim().toLowerCase();
+    
+    // 관정덮개 상태로 판단
+    if (coverText.contains('파손')) {
+      return 'C';
+    } else if (coverText.contains('양호') || 
+               coverText.contains('노후') || 
+               coverText.contains('부식')) {
+      return 'B';
+    }
+    
+    // 기본값
+    return 'B';
+  }
+  
+  /// CSV 내보내기 (외주출력 엑셀 템플릿 기반 헤더 + 평가등급 추가)
   static Future<void> exportToCsv(List<InspectionModel> inspections) async {
     if (inspections.isEmpty) {
       throw Exception('내보낼 데이터가 없습니다');
@@ -66,6 +134,9 @@ class InspectionExportService {
         'NOTUSE',               // 미사용
         'ALTER_FAC',            // 대체시설
         'OTHER',                // 기타사항
+        'ASSESSMENT_DEVICE',    // 측정장치 평가등급
+        'ASSESSMENT_YANGSU',    // 양수장 평가등급
+        'ASSESSMENT_POLLUTION', // 오염방지 평가등급
       ],
     ];
 
@@ -76,6 +147,11 @@ class InspectionExportService {
       if (inspection.inspectDate != null && inspection.inspectDate!.isNotEmpty) {
         formattedDate = inspection.inspectDate!.replaceAll('-', '');
       }
+      
+      // 평가등급 계산
+      final deviceGrade = _calculateDeviceGrade(inspection);
+      final yangsuGrade = _calculateYangsuGrade(inspection);
+      final pollutionGrade = _calculatePollutionGrade(inspection);
       
       rows.add([
         inspection.wellId ?? '',                  // WELL_ID
@@ -127,6 +203,9 @@ class InspectionExportService {
         inspection.notuse ?? '',                  // NOTUSE
         inspection.alterFac ?? '',                // ALTER_FAC
         inspection.other ?? '',                   // OTHER
+        deviceGrade,                              // ASSESSMENT_DEVICE
+        yangsuGrade,                              // ASSESSMENT_YANGSU
+        pollutionGrade,                           // ASSESSMENT_POLLUTION
       ]);
     }
 
