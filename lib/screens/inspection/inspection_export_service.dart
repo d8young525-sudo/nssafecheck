@@ -148,44 +148,45 @@ class InspectionExportService {
     html.Url.revokeObjectUrl(url);
   }
 
-  /// 표 형식 내보내기 (HTML 테이블)
+  /// 표 형식 내보내기 (HTML 테이블) - 시설별 개별 파일로 저장
   static Future<void> exportToTable(List<InspectionModel> inspections) async {
     if (inspections.isEmpty) {
       throw Exception('내보낼 데이터가 없습니다');
     }
 
-    // HTML 테이블 생성
-    StringBuffer htmlContent = StringBuffer();
-    htmlContent.writeln('<!DOCTYPE html>');
-    htmlContent.writeln('<html lang="ko">');
-    htmlContent.writeln('<head>');
-    htmlContent.writeln('  <meta charset="UTF-8">');
-    htmlContent.writeln('  <meta name="viewport" content="width=device-width, initial-scale=1.0">');
-    htmlContent.writeln('  <title>점검 이력</title>');
-    htmlContent.writeln('  <style>');
-    htmlContent.writeln('    body { font-family: "Malgun Gothic", sans-serif; margin: 20px; }');
-    htmlContent.writeln('    h1 { color: #2196F3; }');
-    htmlContent.writeln('    table { width: 100%; border-collapse: collapse; margin-top: 20px; }');
-    htmlContent.writeln('    th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }');
-    htmlContent.writeln('    th { background-color: #2196F3; color: white; font-weight: bold; }');
-    htmlContent.writeln('    tr:nth-child(even) { background-color: #f9f9f9; }');
-    htmlContent.writeln('    tr:hover { background-color: #f5f5f5; }');
-    htmlContent.writeln('    .section-header { background-color: #e3f2fd; font-weight: bold; }');
-    htmlContent.writeln('    @media print { button { display: none; } }');
-    htmlContent.writeln('  </style>');
-    htmlContent.writeln('</head>');
-    htmlContent.writeln('<body>');
-    htmlContent.writeln('  <h1>점검 이력</h1>');
-    htmlContent.writeln('  <p>생성일시: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}</p>');
-    htmlContent.writeln('  <div style="margin-bottom: 20px; padding: 15px; background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 5px;">');
-    htmlContent.writeln('    <strong>💡 PDF/이미지로 저장하기:</strong><br>');
-    htmlContent.writeln('    1. <button onclick="window.print()" style="margin: 5px; padding: 8px 16px; background-color: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer;">인쇄 대화상자 열기</button> 버튼을 클릭하거나 Ctrl+P (Mac: Cmd+P) 를 누르세요<br>');
-    htmlContent.writeln('    2. <strong>"대상"을 "PDF로 저장"으로 선택</strong>하면 PDF 파일로 저장됩니다<br>');
-    htmlContent.writeln('    3. PDF를 이미지로 변환하려면 온라인 PDF→JPG/PNG 변환 도구를 사용하세요');
-    htmlContent.writeln('  </div>');
-
+    // 각 시설별로 개별 HTML 파일 생성 및 다운로드
     for (var inspection in inspections) {
-      htmlContent.writeln('  <h2>${inspection.wellId ?? "점검 데이터"}</h2>');
+      // HTML 테이블 생성
+      StringBuffer htmlContent = StringBuffer();
+      htmlContent.writeln('<!DOCTYPE html>');
+      htmlContent.writeln('<html lang="ko">');
+      htmlContent.writeln('<head>');
+      htmlContent.writeln('  <meta charset="UTF-8">');
+      htmlContent.writeln('  <meta name="viewport" content="width=device-width, initial-scale=1.0">');
+      htmlContent.writeln('  <title>${inspection.wellId ?? "점검"} - 점검 상세</title>');
+      htmlContent.writeln('  <style>');
+      htmlContent.writeln('    body { font-family: "Malgun Gothic", sans-serif; margin: 20px; }');
+      htmlContent.writeln('    h1 { color: #2196F3; }');
+      htmlContent.writeln('    table { width: 100%; border-collapse: collapse; margin-top: 20px; }');
+      htmlContent.writeln('    th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }');
+      htmlContent.writeln('    th { background-color: #2196F3; color: white; font-weight: bold; }');
+      htmlContent.writeln('    tr:nth-child(even) { background-color: #f9f9f9; }');
+      htmlContent.writeln('    tr:hover { background-color: #f5f5f5; }');
+      htmlContent.writeln('    .section-header { background-color: #e3f2fd; font-weight: bold; }');
+      htmlContent.writeln('    @media print { button { display: none; } }');
+      htmlContent.writeln('  </style>');
+      htmlContent.writeln('</head>');
+      htmlContent.writeln('<body>');
+      htmlContent.writeln('  <h1>${inspection.wellId ?? "점검 데이터"}</h1>');
+      htmlContent.writeln('  <p>점검일자: ${inspection.inspectDate ?? "-"} | 점검자: ${inspection.inspector ?? "-"}</p>');
+      htmlContent.writeln('  <p>생성일시: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}</p>');
+      htmlContent.writeln('  <div style="margin-bottom: 20px; padding: 15px; background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 5px;">');
+      htmlContent.writeln('    <strong>💡 PDF/이미지로 저장하기:</strong><br>');
+      htmlContent.writeln('    1. <button onclick="window.print()" style="margin: 5px; padding: 8px 16px; background-color: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer;">인쇄 대화상자 열기</button> 버튼을 클릭하거나 Ctrl+P (Mac: Cmd+P) 를 누르세요<br>');
+      htmlContent.writeln('    2. <strong>"대상"을 "PDF로 저장"으로 선택</strong>하면 PDF 파일로 저장됩니다<br>');
+      htmlContent.writeln('    3. PDF를 이미지로 변환하려면 온라인 PDF→JPG/PNG 변환 도구를 사용하세요');
+      htmlContent.writeln('  </div>');
+
       htmlContent.writeln('  <table>');
 
       // 메타 정보
@@ -263,20 +264,27 @@ class InspectionExportService {
       _addRow(htmlContent, '기타사항', inspection.other);
 
       htmlContent.writeln('  </table>');
-      htmlContent.writeln('  <br>');
+
+      htmlContent.writeln('</body>');
+      htmlContent.writeln('</html>');
+
+      // 시설명을 파일명으로 사용 (특수문자 제거)
+      String fileName = inspection.wellId ?? 'inspection';
+      // 파일명에 사용할 수 없는 문자 제거
+      fileName = fileName.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
+      
+      // HTML 파일 다운로드
+      final bytes = utf8.encode(htmlContent.toString());
+      final blob = html.Blob([bytes]);
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      final anchor = html.AnchorElement(href: url)
+        ..setAttribute('download', '$fileName.html')
+        ..click();
+      html.Url.revokeObjectUrl(url);
+      
+      // 연속 다운로드를 위한 짧은 대기
+      await Future.delayed(const Duration(milliseconds: 100));
     }
-
-    htmlContent.writeln('</body>');
-    htmlContent.writeln('</html>');
-
-    // HTML 파일 다운로드
-    final bytes = utf8.encode(htmlContent.toString());
-    final blob = html.Blob([bytes]);
-    final url = html.Url.createObjectUrlFromBlob(blob);
-    final anchor = html.AnchorElement(href: url)
-      ..setAttribute('download', 'inspections_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.html')
-      ..click();
-    html.Url.revokeObjectUrl(url);
   }
 
   static void _addRow(StringBuffer htmlContent, String label, String? value) {

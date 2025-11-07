@@ -24,7 +24,7 @@ class HomeScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('농업용 관정 정기점검'),
+        title: const Text('NS 정기점검'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -40,13 +40,6 @@ class HomeScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
-                  Icons.water_drop_outlined,
-                  size: 80,
-                  color: Colors.blue,
-                ),
-                const SizedBox(height: 48),
-                
                 // 메인 버튼 - 점검입력
                 InkWell(
                   onTap: () {
