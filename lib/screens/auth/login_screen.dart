@@ -100,20 +100,20 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // 앱 아이콘
+                  // 앱 로고 (한국농어촌공사)
                   Container(
-                    height: 120,
-                    width: 120,
-                    margin: const EdgeInsets.only(bottom: 32),
+                    height: 150,
+                    width: 300,
+                    margin: const EdgeInsets.only(bottom: 24),
                     child: Image.asset(
-                      'assets/icons/app_icon.png',
+                      'assets/icons/kr_logo.png',
                       fit: BoxFit.contain,
                     ),
                   ),
 
                   // 앱 제목
                   const Text(
-                    'NS정기점검',
+                    '한국농어촌공사',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 28,

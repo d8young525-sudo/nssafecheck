@@ -29,50 +29,6 @@ class _InspectionHistoryScreenState extends State<InspectionHistoryScreen> {
         ),
         centerTitle: true,
         actions: [
-          // 저장 버튼 (드롭다운)
-          PopupMenuButton<String>(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.save, size: 18),
-                  SizedBox(width: 4),
-                  Text('저장', style: TextStyle(fontSize: 14)),
-                ],
-              ),
-            ),
-            onSelected: (value) {
-              if (value == 'csv') {
-                _exportAllCsv(context);
-              } else if (value == 'table') {
-                _exportAllTables(context);
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'csv',
-                child: Row(
-                  children: [
-                    Icon(Icons.download, size: 18),
-                    SizedBox(width: 8),
-                    Text('CSV로 출력'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'table',
-                child: Row(
-                  children: [
-                    Icon(Icons.table_chart, size: 18),
-                    SizedBox(width: 8),
-                    Text('표형식으로 저장'),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 4),
           // 정렬 버튼
           PopupMenuButton<String>(
             child: Container(
@@ -105,11 +61,61 @@ class _InspectionHistoryScreenState extends State<InspectionHistoryScreen> {
             ],
           ),
           const SizedBox(width: 4),
-          // 전체삭제 버튼
-          IconButton(
-            icon: const Icon(Icons.delete_forever),
-            tooltip: '전체삭제',
-            onPressed: () => _deleteAllInspections(context),
+          // 저장/삭제 통합 버튼
+          PopupMenuButton<String>(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.more_vert, size: 18),
+                  SizedBox(width: 4),
+                  Text('저장/삭제', style: TextStyle(fontSize: 14)),
+                ],
+              ),
+            ),
+            onSelected: (value) {
+              if (value == 'csv') {
+                _exportAllCsv(context);
+              } else if (value == 'table') {
+                _exportAllTables(context);
+              } else if (value == 'delete_all') {
+                _deleteAllInspections(context);
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'csv',
+                child: Row(
+                  children: [
+                    Icon(Icons.download, size: 18),
+                    SizedBox(width: 8),
+                    Text('CSV로 출력'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'table',
+                child: Row(
+                  children: [
+                    Icon(Icons.table_chart, size: 18),
+                    SizedBox(width: 8),
+                    Text('표형식으로 저장'),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
+              const PopupMenuItem(
+                value: 'delete_all',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete_forever, size: 18, color: Colors.red),
+                    SizedBox(width: 8),
+                    Text('전체삭제', style: TextStyle(color: Colors.red)),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),

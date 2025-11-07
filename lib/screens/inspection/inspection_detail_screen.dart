@@ -73,34 +73,6 @@ class InspectionDetailScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(inspection.wellId ?? '점검 상세'),
         centerTitle: true,
-        actions: [
-          // 인쇄 버튼 (PDF/이미지로 저장 가능)
-          IconButton(
-            icon: const Icon(Icons.print),
-            tooltip: 'PDF로 저장',
-            onPressed: () {
-              // 웹 브라우저 인쇄 다이얼로그 호출
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('PDF로 저장'),
-                  content: const Text(
-                    '브라우저 인쇄 기능을 사용하여 PDF로 저장할 수 있습니다.\n\n'
-                    '1. Ctrl+P (또는 Cmd+P) 를 누르세요\n'
-                    '2. 대상을 "PDF로 저장"으로 선택\n'
-                    '3. 저장 버튼을 클릭하세요',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('확인'),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -493,9 +465,11 @@ class InspectionDetailScreen extends StatelessWidget {
             child: Text(
               label,
               style: const TextStyle(
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
+              overflow: TextOverflow.visible,
+              softWrap: true,
             ),
           ),
           Expanded(
@@ -739,9 +713,11 @@ class InspectionDetailScreen extends StatelessWidget {
             child: Text(
               label,
               style: const TextStyle(
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
+              overflow: TextOverflow.visible,
+              softWrap: true,
             ),
           ),
           Container(

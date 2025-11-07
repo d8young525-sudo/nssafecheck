@@ -177,7 +177,12 @@ class InspectionExportService {
     htmlContent.writeln('<body>');
     htmlContent.writeln('  <h1>점검 이력</h1>');
     htmlContent.writeln('  <p>생성일시: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}</p>');
-    htmlContent.writeln('  <button onclick="window.print()">인쇄하기</button>');
+    htmlContent.writeln('  <div style="margin-bottom: 20px; padding: 15px; background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 5px;">');
+    htmlContent.writeln('    <strong>💡 PDF/이미지로 저장하기:</strong><br>');
+    htmlContent.writeln('    1. <button onclick="window.print()" style="margin: 5px; padding: 8px 16px; background-color: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer;">인쇄 대화상자 열기</button> 버튼을 클릭하거나 Ctrl+P (Mac: Cmd+P) 를 누르세요<br>');
+    htmlContent.writeln('    2. <strong>"대상"을 "PDF로 저장"으로 선택</strong>하면 PDF 파일로 저장됩니다<br>');
+    htmlContent.writeln('    3. PDF를 이미지로 변환하려면 온라인 PDF→JPG/PNG 변환 도구를 사용하세요');
+    htmlContent.writeln('  </div>');
 
     for (var inspection in inspections) {
       htmlContent.writeln('  <h2>${inspection.wellId ?? "점검 데이터"}</h2>');
